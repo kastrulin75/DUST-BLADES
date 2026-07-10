@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DUST & BLADES | Битва</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="game-container">
+    <div class="game-bg" style="background-image: url('../media/desert_castle.png');"></div>
+    <div class="game-bg-overlay"></div>
+    
+    <div class="wave-panel" id="wavePanel">
+        <div class="wave-badge" id="waveBadge">ВОЛНА 1/3</div>
+        <div class="enemies-count" id="enemiesCount">ВРАГОВ: 1</div>
+    </div>
+    
+    <div class="hero-stats-panel" id="heroStatsPanel">
+        <div class="stat-row">
+            <img src="../media/icons/strength.png" class="stat-icon" alt="сила" onerror="this.style.display='none'">
+            <span class="stat-label">СИЛА:</span>
+            <span id="heroStrength" class="stat-value">10</span>
+        </div>
+        <div class="stat-row">
+            <img src="../media/icons/armor.png" class="stat-icon" alt="броня" onerror="this.style.display='none'">
+            <span class="stat-label">БРОНЯ:</span>
+            <span id="heroArmor" class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <img src="../media/icons/gold.png" class="stat-icon" alt="золото" onerror="this.style.display='none'">
+            <span class="stat-label">ЗОЛОТО:</span>
+            <span id="heroGold" class="stat-value">50</span>
+        </div>
+        <div class="stat-row">
+            <img src="../media/icons/potion.png" class="stat-icon" alt="зелье" onerror="this.style.display='none'">
+            <span class="stat-label">ЗЕЛЬЯ:</span>
+            <span id="heroPotions" class="stat-value">3</span>
+        </div>
+        <div class="exp-bar-container">
+            <div class="exp-bar-label">
+                <span>УРОВЕНЬ <span id="heroLevel">1</span></span>
+                <span><span id="expCurrent">0</span> / <span id="expNext">100</span></span>
+            </div>
+            <div class="exp-bar">
+                <div class="exp-bar-fill" id="expBarFill"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="battle-arena">
+        <div class="hero-side">
+            <div class="sprite-wrapper">
+                <img src="../media/hero.png" alt="hero" id="heroImg" class="battle-sprite hero-sprite" onerror="this.src='../media/hero.png'">
+                <div class="hp-bar-container hero-hp">
+                    <div class="hp-bar-fill" id="heroHpFill"></div>
+                    <span class="hp-text" id="heroHpText"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="enemies-container" id="enemiesContainer"></div>
+    </div>
+    
+    <div id="floatingNumbers"></div>
+    
+    <div class="action-panel">
+        <button class="action-btn" id="attackBtn">
+            <img src="../media/icons/attack.png" class="btn-icon" alt="атака" onerror="this.style.display='none'">
+            АТАКОВАТЬ
+        </button>
+        <button class="action-btn" id="potionBtn">
+            <img src="../media/icons/potion.png" class="btn-icon" alt="зелье" onerror="this.style.display='none'">
+            ЗЕЛЬЕ
+        </button>
+        <button class="action-btn" id="shopBtn">
+            <img src="../media/icons/shop.png" class="btn-icon" alt="магазин" onerror="this.style.display='none'">
+            МАГАЗИН
+        </button>
+        <button class="action-btn" id="menuBtn">
+            <img src="../media/icons/exit.png" class="btn-icon" alt="меню" onerror="this.style.display='none'">
+            МЕНЮ
+        </button>
+    </div>
+</div>
+
+<!-- Модальное окно выбора типа моба -->
+<div id="mobTypeModal" class="modal">
+    <div class="modal-content pixel-window">
+        <div class="modal-header">
+            <span class="modal-title">
+                <img src="../media/icons/skull.png" class="modal-icon" alt="враг" onerror="this.style.display='none'">
+                ВЫБЕРИ ТИП ВРАГА
+            </span>
+        </div>
+        <div class="mob-select-buttons">
+            <button class="mob-select-btn" data-mob="skeleton">
+                <img src="../media/icons/skull.png" class="btn-icon" alt="скелет" onerror="this.style.display='none'">
+                СКЕЛЕТ
+            </button>
+            <button class="mob-select-btn" data-mob="ghost">
+                <img src="../media/icons/ghost.png" class="btn-icon" alt="призрак" onerror="this.style.display='none'">
+                ПРИЗРАК
+            </button>
+            <button class="mob-select-btn" data-mob="death_knight">
+                <img src="../media/icons/skull.png" class="btn-icon" alt="рыцарь" onerror="this.style.display='none'">
+                РЫЦАРЬ СМЕРТИ
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно магазина -->
+<div id="shopModal" class="modal" style="display: none;">
+    <div class="modal-content pixel-window">
+        <div class="modal-header">
+            <span class="modal-title">
+                <img src="../media/icons/shop.png" class="modal-icon" alt="магазин" onerror="this.style.display='none'">
+                ТОРГОВЕЦ
+            </span>
+            <button class="close-btn pixel-close" id="closeShopBtn">
+                <img src="../media/icons/close.png" class="close-icon" alt="закрыть" onerror="this.style.display='none'">
+            </button>
+        </div>
+        <div class="shop-items">
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <img src="../media/icons/strength.png" class="item-icon" alt="сила" onerror="this.style.display='none'">
+                    <span>УЛУЧШИТЬ СИЛУ (+2)</span>
+                </div>
+                <div class="shop-item-price">
+                    <span>30</span>
+                    <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
+                </div>
+                <button class="shop-buy-btn" data-upgrade="strength">КУПИТЬ</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <img src="../media/icons/armor.png" class="item-icon" alt="броня" onerror="this.style.display='none'">
+                    <span>УЛУЧШИТЬ БРОНЮ (+2)</span>
+                </div>
+                <div class="shop-item-price">
+                    <span>40</span>
+                    <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
+                </div>
+                <button class="shop-buy-btn" data-upgrade="armor">КУПИТЬ</button>
+            </div>
+            <div class="shop-item">
+                <div class="shop-item-info">
+                    <img src="../media/icons/potion.png" class="item-icon" alt="зелье" onerror="this.style.display='none'">
+                    <span>ЗЕЛЬЕ ЗДОРОВЬЯ</span>
+                </div>
+                <div class="shop-item-price">
+                    <span>30</span>
+                    <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
+                </div>
+                <button class="shop-buy-btn" data-upgrade="potion">КУПИТЬ</button>
+            </div>
+        </div>
+        <div class="shop-player-stats">
+            <div class="shop-stat">
+                <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
+                <span>ЗОЛОТО: <span id="shopGold">0</span></span>
+            </div>
+        </div>
+        <button class="save-settings-btn" id="closeShopBtn2">ЗАКРЫТЬ</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

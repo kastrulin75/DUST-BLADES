@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DUST & BLADES | Меню</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
+</head>
+<body>
+
+<div class="bg-container" id="bgContainer"></div>
+
+<div class="menu-wrapper" id="menuWrapper">
+    <!-- Статистика (слева сверху) — такая же как в игре -->
+    <div class="stats-sidebar" id="statsSidebar">
+        <div class="stat-row">
+            <img src="../media/icons/strength.png" class="stat-icon" alt="сила" onerror="this.style.display='none'">
+            <span class="stat-label">СИЛА:</span>
+            <span id="statStrength" class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <img src="../media/icons/armor.png" class="stat-icon" alt="броня" onerror="this.style.display='none'">
+            <span class="stat-label">БРОНЯ:</span>
+            <span id="statArmor" class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <img src="../media/icons/gold.png" class="stat-icon" alt="золото" onerror="this.style.display='none'">
+            <span class="stat-label">ЗОЛОТО:</span>
+            <span id="statGold" class="stat-value">0</span>
+        </div>
+        <div class="stat-row">
+            <img src="../media/icons/potion.png" class="stat-icon" alt="зелье" onerror="this.style.display='none'">
+            <span class="stat-label">ЗЕЛЬЯ:</span>
+            <span id="statPotions" class="stat-value">0</span>
+        </div>
+        <!-- Шкала опыта (как в игре) -->
+        <div class="exp-bar-container">
+            <div class="exp-bar-label">
+                <span>УРОВЕНЬ <span id="statLevel">1</span></span>
+                <span><span id="expCurrent">0</span> / <span id="expNext">100</span></span>
+            </div>
+            <div class="exp-bar">
+                <div class="exp-bar-fill" id="expBarFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="logo-box" id="logoBox">
+        <img src="../media/logo.png" alt="DUST & BLADES" onerror="this.style.display='none'">
+    </div>
+    
+    <div class="welcome-message" id="welcomeMessage"></div>
+    
+    <button class="continue-btn" id="continueBtn">ПРОДОЛЖИТЬ</button>
+    
+    <div class="buttons-panel" id="buttonsPanel">
+        <button class="menu-btn" id="playBtn">
+            <img src="../media/icons/attack.png" class="btn-icon" alt="играть" onerror="this.style.display='none'">
+            ИГРАТЬ
+        </button>
+        <button class="menu-btn" id="settingsBtn">
+            <img src="../media/icons/shop.png" class="btn-icon" alt="настройки" onerror="this.style.display='none'">
+            НАСТРОЙКИ
+        </button>
+        <button class="menu-btn" id="leaderboardBtn">
+            <img src="../media/icons/trophy.png" class="btn-icon" alt="рекорды" onerror="this.style.display='none'">
+            ТАБЛИЦА РЕКОРДОВ
+        </button>
+    </div>
+
+    <button class="delete-user-btn" id="deleteUserBtn">
+        <img src="../media/icons/delete.png" class="btn-icon-small" alt="удалить" onerror="this.style.display='none'">
+        УДАЛИТЬ
+    </button>
+
+    <div class="version-info" id="versionInfo">ПАТЧ: 1.1</div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div id="confirmDeleteModal" class="pixel-modal" style="display: none;">
+    <div class="pixel-window confirm-window">
+        <div class="modal-header">
+            <span class="modal-title">ПОДТВЕРЖДЕНИЕ</span>
+            <button class="close-btn" id="closeConfirmBtn">
+                <img src="../media/icons/close.png" class="close-icon" alt="закрыть" onerror="this.style.display='none'">
+            </button>
+        </div>
+        <div class="confirm-content">
+            <p>УДАЛИТЬ ПОЛЬЗОВАТЕЛЯ?</p>
+            <p class="confirm-warning">ВСЕ ДАННЫЕ БУДУТ УТЕРЯНЫ</p>
+            <div class="confirm-buttons">
+                <button class="confirm-yes" id="confirmYesBtn">ДА</button>
+                <button class="confirm-no" id="confirmNoBtn">НЕТ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек -->
+<div id="settingsModal" class="pixel-modal" style="display: none;">
+    <div class="pixel-window">
+        <div class="modal-header">
+            <span class="modal-title">
+                <img src="../media/icons/shop.png" class="modal-icon" alt="настройки" onerror="this.style.display='none'">
+                НАСТРОЙКИ
+            </span>
+            <button class="close-btn" id="closeSettingsBtn">
+                <img src="../media/icons/close.png" class="close-icon" alt="закрыть" onerror="this.style.display='none'">
+            </button>
+        </div>
+        <div class="settings-content">
+            <div class="setting-row">
+                <label>ГРОМКОСТЬ МУЗЫКИ</label>
+                <input type="range" id="musicVolume" min="0" max="100" value="50">
+                <span id="musicVolumeValue">50%</span>
+            </div>
+            <div class="setting-row">
+                <label>ГРОМКОСТЬ ЗВУКОВ</label>
+                <input type="range" id="sfxVolume" min="0" max="100" value="50">
+                <span id="sfxVolumeValue">50%</span>
+            </div>
+        </div>
+        <button class="save-settings-btn" id="saveSettingsBtn">СОХРАНИТЬ</button>
+    </div>
+</div>
+
+<!-- Модальное окно таблицы рекордов -->
+<div id="leaderboardModal" class="pixel-modal" style="display: none;">
+    <div class="pixel-window leaderboard-window">
+        <div class="modal-header">
+            <span class="modal-title">
+                <img src="../media/icons/trophy.png" class="modal-icon" alt="рекорды" onerror="this.style.display='none'">
+                ТАБЛИЦА РЕКОРДОВ
+            </span>
+            <button class="close-btn" id="closeLeaderboardBtn">
+                <img src="../media/icons/close.png" class="close-icon" alt="закрыть" onerror="this.style.display='none'">
+            </button>
+        </div>
+        <div class="leaderboard-header">
+            <span>МЕСТО</span>
+            <span>ИМЯ</span>
+            <span>УБИЙСТВ</span>
+        </div>
+        <div id="leaderboardList" class="leaderboard-list">ЗАГРУЗКА...</div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

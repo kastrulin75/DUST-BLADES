@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>DUST & BLADES | Вход</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
+</head>
+<body>
+
+<div class="pixel-bg">
+    <div class="logo-top">
+        <img src="../media/logo.png" alt="DUST & BLADES" class="game-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <div class="logo-fallback" style="display:none;">[DUST & BLADES]</div>
+    </div>
+
+    <div class="pixel-window">
+        <div class="auth-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="login">ВОЙТИ</button>
+                <button class="tab-btn" data-tab="register">РЕГИСТРАЦИЯ</button>
+            </div>
+
+            <div class="tab-content active" id="loginTab">
+                <div class="input-group">
+                    <label>НИКНЕЙМ</label>
+                    <input type="text" id="loginUsername" placeholder="Никнейм" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>ПАРОЛЬ</label>
+                    <input type="password" id="loginPassword" placeholder="****">
+                </div>
+                <button class="pixel-btn pixel-btn-red" id="doLogin">ВСТУПИТЬ В БОЙ</button>
+                <div id="loginError" class="error-msg" style="display: none;"></div>
+            </div>
+
+            <div class="tab-content" id="registerTab">
+                <div class="input-group">
+                    <label>ПРИДУМАЙТЕ НИКНЕЙМ</label>
+                    <input type="text" id="regUsername" placeholder="Никнейм" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>ПАРОЛЬ</label>
+                    <input type="password" id="regPassword" placeholder="****">
+                </div>
+                <div class="input-group">
+                    <label>ПОВТОРИ ПАРОЛЬ</label>
+                    <input type="password" id="regPassword2" placeholder="****">
+                </div>
+                <button class="pixel-btn pixel-btn-red" id="doRegister">ВСТУПИТЬ В БОЙ</button>
+                <div id="regError" class="error-msg" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

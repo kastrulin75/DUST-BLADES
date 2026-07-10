@@ -1,0 +1,416 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+body {
+    background: #0a0a0a;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+/* Центрирование без прокрутки */
+.pixel-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(10px, 3vh, 40px);
+    padding: clamp(10px, 2vh, 30px);
+}
+
+/* Логотип */
+.logo-top {
+    text-align: center;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.game-logo {
+    max-width: min(400px, 60vw, 60vh);
+    width: auto;
+    height: auto;
+    max-height: 18vh;
+    display: block;
+    margin: 0 auto;
+    image-rendering: pixelated;
+    object-fit: contain;
+}
+
+.logo-fallback {
+    font-size: clamp(10px, 2.5vw, 20px);
+    color: #e6c468;
+    text-shadow: 3px 3px 0 #5a3e1a;
+    background: #1a1814;
+    display: inline-block;
+    padding: clamp(6px, 1.5vh, 14px) clamp(12px, 3vw, 28px);
+    border: 3px solid #e6c468;
+    white-space: nowrap;
+}
+
+/* Окно входа — фиксированная ширина, авто высота */
+.pixel-window {
+    background: #1e1b16;
+    border: 4px solid #e6c468;
+    padding: clamp(15px, 3vh, 30px) clamp(20px, 4vw, 35px);
+    width: min(480px, 85vw);
+    max-width: 550px;
+    box-shadow: inset 0 0 0 2px #f5e2a0, 8px 8px 0 #0a0804;
+    flex-shrink: 0;
+}
+
+.auth-container {
+    width: 100%;
+}
+
+/* Табы */
+.tab-buttons {
+    display: flex;
+    gap: clamp(10px, 3vw, 20px);
+    margin-bottom: clamp(15px, 3vh, 25px);
+    border-bottom: 3px solid #e6c468;
+    padding-bottom: 10px;
+    justify-content: center;
+    flex-wrap: nowrap;
+}
+
+.tab-btn {
+    background: #2a2418;
+    border: 2px solid #c9a53b;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(9px, 2.2vw, 14px);
+    padding: clamp(6px, 1.5vh, 10px) clamp(12px, 2.5vw, 20px);
+    color: #e6c468;
+    cursor: pointer;
+    box-shadow: 3px 3px 0 #0a0804;
+    transition: all 0.05s linear;
+    white-space: nowrap;
+}
+
+.tab-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 #0a0804;
+}
+
+.tab-btn.active {
+    background: #5e4e32;
+    color: #f5e6b0;
+    border-color: #f5d87a;
+    box-shadow: inset 2px 2px 0 #2a2418, 2px 2px 0 #0a0804;
+    transform: none;
+}
+
+.tab-content {
+    display: none;
+    width: 100%;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Поля ввода */
+.input-group {
+    margin-bottom: clamp(10px, 2.5vh, 18px);
+    width: 100%;
+}
+
+.input-group label {
+    display: block;
+    font-size: clamp(8px, 1.8vw, 12px);
+    margin-bottom: clamp(5px, 1.5vh, 8px);
+    color: #e6c468;
+    letter-spacing: 0.5px;
+}
+
+.input-group input {
+    width: 100%;
+    background: #0f0d0a;
+    border: 2px solid #c9a53b;
+    padding: clamp(8px, 1.5vh, 12px);
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(8px, 1.8vw, 12px);
+    color: #f5e6b0;
+    outline: none;
+    box-shadow: inset 2px 2px 0 #00000055;
+}
+
+.input-group input:focus {
+    border-color: #f5d87a;
+    box-shadow: inset 2px 2px 0 #00000055, 0 0 5px rgba(230, 196, 104, 0.3);
+}
+
+/* Кнопка — теперь не выходит за рамки */
+.pixel-btn-red {
+    background: #8b1a1a;
+    border: none;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(9px, 2vw, 14px);
+    padding: clamp(10px, 2vh, 14px);
+    width: 100%;
+    margin-top: clamp(8px, 2vh, 15px);
+    color: #ffd966;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 #2a0a0a;
+    transition: 0.05s linear;
+    position: relative;
+    display: block;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Для очень маленьких экранов — перенос текста кнопки */
+@media (max-width: 380px) {
+    .pixel-btn-red {
+        white-space: normal;
+        line-height: 1.4;
+        padding: 8px 5px;
+        font-size: 8px;
+    }
+}
+
+.pixel-btn-red::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.3) 100%);
+    pointer-events: none;
+}
+
+.pixel-btn-red:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 #2a0a0a;
+}
+
+/* Сообщение об ошибке */
+.error-msg {
+    margin-top: 10px;
+    font-size: clamp(7px, 1.5vw, 10px);
+    color: #ff8866;
+    text-align: center;
+    background: #2a1a10;
+    padding: 6px 8px;
+    border-left: 3px solid #ff5533;
+    display: none;
+    word-break: break-word;
+}
+
+/* ========== АДАПТАЦИЯ ДЛЯ РАЗНЫХ УСТРОЙСТВ ========== */
+
+/* Очень маленькие телефоны в ландшафте (iPhone SE и подобные) */
+@media (max-width: 650px) and (orientation: landscape) {
+    .pixel-window {
+        padding: 10px 15px;
+        width: min(420px, 90vw);
+    }
+    .tab-btn {
+        padding: 4px 10px;
+        font-size: 8px;
+    }
+    .tab-buttons {
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .input-group {
+        margin-bottom: 8px;
+    }
+    .input-group input {
+        padding: 6px 8px;
+        font-size: 8px;
+    }
+    .input-group label {
+        font-size: 7px;
+        margin-bottom: 4px;
+    }
+    .pixel-btn-red {
+        padding: 6px;
+        font-size: 8px;
+        margin-top: 6px;
+    }
+    .game-logo {
+        max-height: 10vh;
+        max-width: 50vw;
+    }
+    .pixel-bg {
+        gap: 8px;
+        padding: 5px;
+    }
+    .error-msg {
+        font-size: 6px;
+        padding: 4px;
+        margin-top: 6px;
+    }
+}
+
+/* Телефоны портретные */
+@media (max-width: 600px) and (orientation: portrait) {
+    .pixel-window {
+        padding: 15px 20px;
+        width: 90vw;
+        max-width: 400px;
+    }
+    .tab-btn {
+        font-size: 9px;
+        padding: 6px 12px;
+    }
+    .game-logo {
+        max-height: 14vh;
+    }
+    .pixel-btn-red {
+        font-size: 10px;
+        padding: 10px;
+    }
+}
+
+/* Планшеты портретные */
+@media (min-width: 600px) and (max-width: 900px) and (orientation: portrait) {
+    .pixel-window {
+        width: 450px;
+        padding: 25px 30px;
+    }
+    .tab-btn {
+        font-size: 12px;
+        padding: 8px 18px;
+    }
+    .game-logo {
+        max-height: 16vh;
+    }
+}
+
+/* Планшеты в ландшафте */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+    .pixel-window {
+        width: 480px;
+        padding: 20px 30px;
+    }
+    .game-logo {
+        max-height: 15vh;
+    }
+}
+
+/* Десктопы (Full HD, 2K) */
+@media (min-width: 1280px) and (orientation: landscape) {
+    .pixel-window {
+        width: 500px;
+        padding: 30px 40px;
+    }
+    .tab-btn {
+        font-size: 14px;
+        padding: 10px 22px;
+    }
+    .input-group label {
+        font-size: 12px;
+    }
+    .input-group input {
+        font-size: 12px;
+        padding: 12px;
+    }
+    .pixel-btn-red {
+        font-size: 14px;
+        padding: 14px;
+    }
+    .game-logo {
+        max-height: 20vh;
+    }
+}
+
+/* 2K и больше */
+@media (min-width: 1920px) {
+    .pixel-window {
+        width: 580px;
+        padding: 35px 45px;
+    }
+    .tab-btn {
+        font-size: 16px;
+        padding: 12px 26px;
+    }
+    .input-group label {
+        font-size: 13px;
+    }
+    .input-group input {
+        font-size: 13px;
+        padding: 14px;
+    }
+    .pixel-btn-red {
+        font-size: 16px;
+        padding: 16px;
+    }
+    .game-logo {
+        max-height: 22vh;
+    }
+}
+
+/* 4K мониторы */
+@media (min-width: 2560px) {
+    .pixel-window {
+        width: 700px;
+        padding: 45px 55px;
+    }
+    .tab-btn {
+        font-size: 20px;
+        padding: 15px 32px;
+    }
+    .input-group label {
+        font-size: 16px;
+    }
+    .input-group input {
+        font-size: 16px;
+        padding: 18px;
+    }
+    .pixel-btn-red {
+        font-size: 20px;
+        padding: 20px;
+    }
+    .game-logo {
+        max-height: 25vh;
+    }
+}
+
+/* Экстремально маленькая высота (например, 300-400px) */
+@media (max-height: 450px) and (orientation: landscape) {
+    .pixel-bg {
+        gap: 5px;
+        padding: 5px;
+    }
+    .pixel-window {
+        padding: 8px 15px;
+    }
+    .tab-buttons {
+        margin-bottom: 6px;
+        padding-bottom: 6px;
+    }
+    .input-group {
+        margin-bottom: 5px;
+    }
+    .input-group input {
+        padding: 4px 6px;
+    }
+    .pixel-btn-red {
+        padding: 5px;
+        margin-top: 5px;
+    }
+    .game-logo {
+        max-height: 8vh;
+    }
+    .error-msg {
+        margin-top: 4px;
+        padding: 3px;
+    }
+}
