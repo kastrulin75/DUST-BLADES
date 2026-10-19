@@ -4,172 +4,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DUST & BLADES | Битва</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script>
+        /* UI scale like on 1080p: 1 on <=1080p, ~1.33 on 2K, 2 on 4K */
+        (function () {
+            function fit() {
+                var s = Math.max(1, Math.min(innerWidth / 1920, innerHeight / 1080));
+                document.documentElement.style.setProperty('--s', s.toFixed(4));
+            }
+            fit();
+            addEventListener('resize', fit);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Tiny5&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../shared/theme.css?v=3.5">
+    <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
+<div id="fxCurtain"></div>
 
-<div class="game-container">
-    <div class="game-bg" style="background-image: url('../media/desert_castle.png');"></div>
-    <div class="game-bg-overlay"></div>
-    
-    <div class="wave-panel" id="wavePanel">
-        <div class="wave-badge" id="waveBadge">ВОЛНА 1/3</div>
-        <div class="enemies-count" id="enemiesCount">ВРАГОВ: 1</div>
-    </div>
-    
-    <div class="hero-stats-panel" id="heroStatsPanel">
-        <div class="stat-row">
-            <img src="../media/icons/strength.png" class="stat-icon" alt="сила" onerror="this.style.display='none'">
-            <span class="stat-label">СИЛА:</span>
-            <span id="heroStrength" class="stat-value">10</span>
-        </div>
-        <div class="stat-row">
-            <img src="../media/icons/armor.png" class="stat-icon" alt="броня" onerror="this.style.display='none'">
-            <span class="stat-label">БРОНЯ:</span>
-            <span id="heroArmor" class="stat-value">0</span>
-        </div>
-        <div class="stat-row">
-            <img src="../media/icons/gold.png" class="stat-icon" alt="золото" onerror="this.style.display='none'">
-            <span class="stat-label">ЗОЛОТО:</span>
-            <span id="heroGold" class="stat-value">50</span>
-        </div>
-        <div class="stat-row">
-            <img src="../media/icons/potion.png" class="stat-icon" alt="зелье" onerror="this.style.display='none'">
-            <span class="stat-label">ЗЕЛЬЯ:</span>
-            <span id="heroPotions" class="stat-value">3</span>
-        </div>
-        <div class="exp-bar-container">
-            <div class="exp-bar-label">
-                <span>УРОВЕНЬ <span id="heroLevel">1</span></span>
-                <span><span id="expCurrent">0</span> / <span id="expNext">100</span></span>
-            </div>
-            <div class="exp-bar">
-                <div class="exp-bar-fill" id="expBarFill"></div>
-            </div>
+<div class="game" id="game">
+    <!-- ===== backdrop ===== -->
+    <div class="stage" id="stage">
+        <div class="stage-box" id="stageBox">
+            <div class="stage-img desert" style="background-image:url('../media/px/desert_dusk.jpg')"></div>
+            <div class="sun-glow"></div>
+            <div class="dusk"></div>
         </div>
     </div>
-    
-    <div class="battle-arena">
-        <div class="hero-side">
-            <div class="sprite-wrapper">
-                <img src="../media/hero.png" alt="hero" id="heroImg" class="battle-sprite hero-sprite" onerror="this.src='../media/hero.png'">
-                <div class="hp-bar-container hero-hp">
-                    <div class="hp-bar-fill" id="heroHpFill"></div>
-                    <span class="hp-text" id="heroHpText"></span>
-                </div>
+    <div class="ground"></div>
+
+    <!-- ===== arena ===== -->
+    <div class="arena" id="arena">
+        <div class="hero" id="hero">
+            <div class="unit-shadow"></div>
+            <div class="hero-aura" id="heroAura"></div>
+            <img src="../media/px/sprites/hero/idle.png" alt="Герой" id="heroImg" class="hero-sprite" decoding="async">
+        </div>
+        <div class="foes" id="enemiesContainer"></div>
+    </div>
+
+    <!-- ===== HUD: hero card ===== -->
+    <div class="px-panel glass hud-hero" id="heroStatsPanel">
+        <div class="portrait px-inset"><div class="portrait-img"></div><span class="lvl-badge" id="heroLevel">1</span></div>
+        <div class="hud-bars">
+            <div class="hud-name"><span id="heroName">ГЕРОЙ</span><span class="hud-rank" id="heroRank"></span></div>
+            <div class="bar-row">
+                <img src="../media/px/icons/heart.png" alt="HP">
+                <div class="px-bar hp" id="heroHpBar"><div class="ghost" id="heroHpGhost"></div><div class="fill" id="heroHpFill"></div><span class="txt" id="heroHpText"></span></div>
+            </div>
+            <div class="bar-row">
+                <img src="../media/px/icons/strength.png" alt="Ярость">
+                <div class="px-bar rage" id="rageBar"><div class="fill" id="rageFill" style="width:0"></div><span class="txt" id="rageText">ЯРОСТЬ 0</span></div>
+            </div>
+            <div class="bar-row thin">
+                <img src="../media/px/icons/exp.png" alt="Опыт">
+                <div class="px-bar exp"><div class="fill" id="expBarFill" style="width:0"></div></div>
+                <span class="exp-num"><span id="expCurrent">0</span>/<span id="expNext">100</span></span>
             </div>
         </div>
-        
-        <div class="enemies-container" id="enemiesContainer"></div>
     </div>
-    
-    <div id="floatingNumbers"></div>
-    
-    <div class="action-panel">
-        <button class="action-btn" id="attackBtn">
-            <img src="../media/icons/attack.png" class="btn-icon" alt="атака" onerror="this.style.display='none'">
-            АТАКОВАТЬ
-        </button>
-        <button class="action-btn" id="potionBtn">
-            <img src="../media/icons/potion.png" class="btn-icon" alt="зелье" onerror="this.style.display='none'">
-            ЗЕЛЬЕ
-        </button>
-        <button class="action-btn" id="shopBtn">
-            <img src="../media/icons/shop.png" class="btn-icon" alt="магазин" onerror="this.style.display='none'">
-            МАГАЗИН
-        </button>
-        <button class="action-btn" id="menuBtn">
-            <img src="../media/icons/exit.png" class="btn-icon" alt="меню" onerror="this.style.display='none'">
-            МЕНЮ
-        </button>
+
+    <!-- ===== HUD: wave ===== -->
+    <div class="hud-wave" id="wavePanel">
+        <div class="wave-title" id="waveBadge">ВОЛНА I</div>
+        <div class="wave-pips" id="wavePips"><i></i><i></i><i></i></div>
+        <div class="wave-sub"><span id="enemiesCount">ВРАГОВ: 0</span> · <span id="diffBadge" class="diff-badge">НОРМА</span></div>
+        <div class="turn-banner" id="turnBanner" hidden></div>
+    </div>
+
+    <!-- ===== HUD: resources ===== -->
+    <div class="hud-res">
+        <div class="res px-inset" id="goldBox"><img src="../media/px/icons/gold.png" alt="Золото"><b id="heroGold">0</b></div>
+        <div class="res px-inset"><img src="../media/px/icons/armor.png" alt="Броня"><b id="heroArmor">0</b></div>
+        <div class="res px-inset"><img src="../media/px/icons/strength.png" alt="Сила"><b id="heroStrength">0</b></div>
+        <button class="px-btn icon-btn" id="shopBtn" type="button" title="Торговец [S]"><img src="../media/px/icons/shop.png" class="ico" alt="Магазин"></button>
+        <button class="px-btn icon-btn" id="menuBtn" type="button" title="Меню [Esc]"><img src="../media/px/icons/exit.png" class="ico" alt="Меню"></button>
+    </div>
+
+    <!-- ===== bottom command bar ===== -->
+    <div class="command">
+        <div class="px-panel glass log-panel">
+            <div class="log-title"><img src="../media/px/icons/wait.png" alt="">ЖУРНАЛ БОЯ</div>
+            <ul class="log" id="combatLog"></ul>
+        </div>
+        <div class="px-panel glass actions">
+            <button class="px-btn act" id="attackBtn" type="button">
+                <img src="../media/px/icons/attack.png" class="ico" alt="">
+                <span class="act-name">АТАКА</span>
+                <span class="px-key">SPACE</span>
+            </button>
+            <button class="px-btn act rage-act" id="rageBtn" type="button">
+                <img src="../media/px/icons/strength.png" class="ico" alt="">
+                <span class="act-name">ВИХРЬ</span>
+                <span class="px-key">R</span>
+            </button>
+            <button class="px-btn act" id="defendBtn" type="button">
+                <img src="../media/px/icons/armor.png" class="ico" alt="">
+                <span class="act-name">ЗАЩИТА</span>
+                <span class="px-key">D</span>
+            </button>
+            <button class="px-btn act" id="potionBtn" type="button">
+                <img src="../media/px/icons/potion.png" class="ico" alt="">
+                <span class="act-name">ЗЕЛЬЕ</span>
+                <span class="px-key">P</span>
+                <span class="count" id="heroPotions">0</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="combo" id="comboBox" hidden><b id="comboNum">3</b><span>КОМБО</span></div>
+    <div class="low-hp-vignette"></div>
+</div>
+
+<div id="floatingNumbers"></div>
+
+<!-- ===== cinematic banner ===== -->
+<div class="cinema" id="cinema">
+    <div class="bar top"></div>
+    <div class="bar bottom"></div>
+    <div class="cinema-text">
+        <div class="cinema-title" id="cinemaTitle"></div>
+        <div class="cinema-sub" id="cinemaSub"></div>
     </div>
 </div>
 
-<!-- Модальное окно выбора типа моба -->
-<div id="mobTypeModal" class="modal">
-    <div class="modal-content pixel-window">
-        <div class="modal-header">
-            <span class="modal-title">
-                <img src="../media/icons/skull.png" class="modal-icon" alt="враг" onerror="this.style.display='none'">
-                ВЫБЕРИ ТИП ВРАГА
-            </span>
+<!-- ===== choose enemy ===== -->
+<div id="mobTypeModal" class="px-modal">
+    <div class="px-panel choose">
+        <div class="modal-head px-title"><img src="../media/px/icons/skull.png" alt="">ВЫБЕРИ ИСПЫТАНИЕ</div>
+        <div class="choose-sub">3 волны, каждая сильнее предыдущей.</div>
+        <div class="px-divider"></div>
+
+        <div class="diff-row" role="group" aria-label="Сложность">
+            <span class="diff-label">СЛОЖНОСТЬ</span>
+            <div class="seg">
+                <button type="button" class="diff-btn" data-diff="easy">ЛЕГКО</button>
+                <button type="button" class="diff-btn" data-diff="normal">НОРМА</button>
+                <button type="button" class="diff-btn" data-diff="hard">СЛОЖНО</button>
+            </div>
         </div>
-        <div class="mob-select-buttons">
-            <button class="mob-select-btn" data-mob="skeleton">
-                <img src="../media/icons/skull.png" class="btn-icon" alt="скелет" onerror="this.style.display='none'">
-                СКЕЛЕТ
+
+        <div class="mob-cards">
+            <button class="mob-card" type="button" data-mob="skeleton">
+                <div class="mob-art"><img src="../media/px/sprites/skeleton/idle.png" alt=""></div>
+                <div class="mob-name">СКЕЛЕТ</div>
+                <div class="threat" data-threat="1"><i></i><i></i><i></i></div>
+                <div class="mob-stats"></div>
+                <div class="mob-hint"></div>
             </button>
-            <button class="mob-select-btn" data-mob="ghost">
-                <img src="../media/icons/ghost.png" class="btn-icon" alt="призрак" onerror="this.style.display='none'">
-                ПРИЗРАК
+            <button class="mob-card" type="button" data-mob="ghost">
+                <div class="mob-art"><img src="../media/px/sprites/ghost/idle.png" alt=""></div>
+                <div class="mob-name">ПРИЗРАК</div>
+                <div class="threat" data-threat="2"><i></i><i></i><i></i></div>
+                <div class="mob-stats"></div>
+                <div class="mob-hint"></div>
             </button>
-            <button class="mob-select-btn" data-mob="death_knight">
-                <img src="../media/icons/skull.png" class="btn-icon" alt="рыцарь" onerror="this.style.display='none'">
-                РЫЦАРЬ СМЕРТИ
+            <button class="mob-card" type="button" data-mob="death_knight">
+                <div class="mob-art"><img src="../media/px/sprites/death-knight/idle.png" alt=""></div>
+                <div class="mob-name">РЫЦАРЬ СМЕРТИ</div>
+                <div class="threat" data-threat="3"><i></i><i></i><i></i></div>
+                <div class="mob-stats"></div>
+                <div class="mob-hint"></div>
             </button>
+        </div>
+        <div class="choose-foot">
+            <button class="px-btn" id="chooseMenuBtn" type="button"><img src="../media/px/icons/exit.png" class="ico" alt="">В МЕНЮ</button>
+            <span class="choose-keys"><span class="px-key">←</span><span class="px-key">→</span> ВЫБОР · <span class="px-key">ENTER</span> В БОЙ</span>
         </div>
     </div>
 </div>
 
-<!-- Модальное окно магазина -->
-<div id="shopModal" class="modal" style="display: none;">
-    <div class="modal-content pixel-window">
-        <div class="modal-header">
-            <span class="modal-title">
-                <img src="../media/icons/shop.png" class="modal-icon" alt="магазин" onerror="this.style.display='none'">
-                ТОРГОВЕЦ
-            </span>
-            <button class="close-btn pixel-close" id="closeShopBtn">
-                <img src="../media/icons/close.png" class="close-icon" alt="закрыть" onerror="this.style.display='none'">
-            </button>
+<!-- ===== shop ===== -->
+<div id="shopModal" class="px-modal">
+    <div class="px-panel shop">
+        <button class="px-btn px-close" id="closeShopBtn" type="button" aria-label="Закрыть"><img src="../media/px/icons/close.png" alt=""></button>
+        <div class="modal-head px-title"><img src="../media/px/icons/shop.png" alt="">ТОРГОВЕЦ</div>
+        <div class="merchant-line" id="merchantLine">«Чего желаешь?»</div>
+        <div class="px-divider"></div>
+        <div class="shop-items" id="shopItems"></div>
+        <div class="shop-foot">
+            <div class="res px-inset"><img src="../media/px/icons/gold.png" alt=""><b id="shopGold">0</b></div>
+            <button class="px-btn" id="closeShopBtn2" type="button">УЙТИ</button>
         </div>
-        <div class="shop-items">
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <img src="../media/icons/strength.png" class="item-icon" alt="сила" onerror="this.style.display='none'">
-                    <span>УЛУЧШИТЬ СИЛУ (+2)</span>
-                </div>
-                <div class="shop-item-price">
-                    <span>30</span>
-                    <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
-                </div>
-                <button class="shop-buy-btn" data-upgrade="strength">КУПИТЬ</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <img src="../media/icons/armor.png" class="item-icon" alt="броня" onerror="this.style.display='none'">
-                    <span>УЛУЧШИТЬ БРОНЮ (+2)</span>
-                </div>
-                <div class="shop-item-price">
-                    <span>40</span>
-                    <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
-                </div>
-                <button class="shop-buy-btn" data-upgrade="armor">КУПИТЬ</button>
-            </div>
-            <div class="shop-item">
-                <div class="shop-item-info">
-                    <img src="../media/icons/potion.png" class="item-icon" alt="зелье" onerror="this.style.display='none'">
-                    <span>ЗЕЛЬЕ ЗДОРОВЬЯ</span>
-                </div>
-                <div class="shop-item-price">
-                    <span>30</span>
-                    <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
-                </div>
-                <button class="shop-buy-btn" data-upgrade="potion">КУПИТЬ</button>
-            </div>
-        </div>
-        <div class="shop-player-stats">
-            <div class="shop-stat">
-                <img src="../media/icons/gold.png" class="inline-icon" alt="золото" onerror="this.style.display='none'">
-                <span>ЗОЛОТО: <span id="shopGold">0</span></span>
-            </div>
-        </div>
-        <button class="save-settings-btn" id="closeShopBtn2">ЗАКРЫТЬ</button>
     </div>
 </div>
 
-<script src="script.js"></script>
+<!-- ===== result ===== -->
+<div class="result" id="resultScreen" hidden>
+    <div class="result-rays"></div>
+    <img class="result-image" id="resultImage" src="" alt="">
+    <div class="px-panel glass result-card">
+        <div class="result-stats" id="resultStats"></div>
+        <div class="result-buttons">
+            <button class="px-btn red" id="restartBtn" type="button"><img src="../media/px/icons/attack.png" class="ico" alt="">ЕЩЁ РАЗ</button>
+            <button class="px-btn" id="resultMenuBtn" type="button"><img src="../media/px/icons/exit.png" class="ico" alt="">В МЕНЮ</button>
+        </div>
+    </div>
+</div>
+
+<div class="crt"></div>
+
+<script src="../shared/core.js?v=3.5"></script>
+<script src="../shared/fx.js?v=3.5"></script>
+<script src="script.js?v=3.5"></script>
 </body>
 </html>

@@ -4,58 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>DUST & BLADES | Вход</title>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <script>
+        /* UI scale like on 1080p: 1 on <=1080p, ~1.33 on 2K, 2 on 4K */
+        (function () {
+            function fit() {
+                var s = Math.max(1, Math.min(innerWidth / 1920, innerHeight / 1080));
+                document.documentElement.style.setProperty('--s', s.toFixed(4));
+            }
+            fit();
+            addEventListener('resize', fit);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Tiny5&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/theme.css?v=3.5">
+    <link rel="stylesheet" href="style.css?v=3.5">
     <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
 </head>
 <body>
+<div id="fxCurtain"></div>
 
-<div class="pixel-bg">
-    <div class="logo-top">
-        <img src="../media/logo.png" alt="DUST & BLADES" class="game-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
-        <div class="logo-fallback" style="display:none;">[DUST & BLADES]</div>
+<main class="gate">
+    <div class="logo-wrap">
+        <div class="logo-glow"></div>
+        <img src="../media/px/logo.png" alt="DUST & BLADES" class="logo" onerror="this.style.display='none'">
     </div>
 
-    <div class="pixel-window">
-        <div class="auth-container">
-            <div class="tab-buttons">
-                <button class="tab-btn active" data-tab="login">ВОЙТИ</button>
-                <button class="tab-btn" data-tab="register">РЕГИСТРАЦИЯ</button>
-            </div>
-
-            <div class="tab-content active" id="loginTab">
-                <div class="input-group">
-                    <label>НИКНЕЙМ</label>
-                    <input type="text" id="loginUsername" placeholder="Никнейм" autocomplete="off">
-                </div>
-                <div class="input-group">
-                    <label>ПАРОЛЬ</label>
-                    <input type="password" id="loginPassword" placeholder="****">
-                </div>
-                <button class="pixel-btn pixel-btn-red" id="doLogin">ВСТУПИТЬ В БОЙ</button>
-                <div id="loginError" class="error-msg" style="display: none;"></div>
-            </div>
-
-            <div class="tab-content" id="registerTab">
-                <div class="input-group">
-                    <label>ПРИДУМАЙТЕ НИКНЕЙМ</label>
-                    <input type="text" id="regUsername" placeholder="Никнейм" autocomplete="off">
-                </div>
-                <div class="input-group">
-                    <label>ПАРОЛЬ</label>
-                    <input type="password" id="regPassword" placeholder="****">
-                </div>
-                <div class="input-group">
-                    <label>ПОВТОРИ ПАРОЛЬ</label>
-                    <input type="password" id="regPassword2" placeholder="****">
-                </div>
-                <button class="pixel-btn pixel-btn-red" id="doRegister">ВСТУПИТЬ В БОЙ</button>
-                <div id="regError" class="error-msg" style="display: none;"></div>
-            </div>
+    <section class="px-panel glass auth">
+        <div class="tabs" role="tablist">
+            <button class="tab active" data-tab="login" role="tab" type="button">ВОЙТИ</button>
+            <button class="tab" data-tab="register" role="tab" type="button">РЕГИСТРАЦИЯ</button>
+            <i class="tab-marker"></i>
         </div>
-    </div>
-</div>
 
-<script src="script.js"></script>
+        <form class="tab-content active" id="loginTab" autocomplete="off" novalidate>
+            <div class="px-field">
+                <label for="loginUsername">ИМЯ</label>
+                <input class="px-input" type="text" id="loginUsername" placeholder="ИМЯ" maxlength="20" spellcheck="false">
+            </div>
+            <div class="px-field">
+                <label for="loginPassword">ПАРОЛЬ</label>
+                <input class="px-input" type="password" id="loginPassword" placeholder="••••">
+            </div>
+            <button class="px-btn red submit" id="doLogin" type="submit">
+                <img src="../media/px/icons/attack.png" class="ico" alt="">
+                ВОЙТИ
+            </button>
+            <div id="loginError" class="px-error" hidden></div>
+        </form>
+
+        <form class="tab-content" id="registerTab" autocomplete="off" novalidate>
+            <div class="px-field">
+                <label for="regUsername">ИМЯ</label>
+                <input class="px-input" type="text" id="regUsername" placeholder="ИМЯ" maxlength="20" spellcheck="false">
+            </div>
+            <div class="px-field">
+                <label for="regPassword">ПАРОЛЬ</label>
+                <input class="px-input" type="password" id="regPassword" placeholder="••••">
+            </div>
+            <div class="px-field">
+                <label for="regPassword2">ПОВТОРИТЕ ПАРОЛЬ</label>
+                <input class="px-input" type="password" id="regPassword2" placeholder="••••">
+            </div>
+            <button class="px-btn red submit" id="doRegister" type="submit">
+                <img src="../media/px/icons/skull.png" class="ico" alt="">
+                СОЗДАТЬ
+            </button>
+            <div id="regError" class="px-error" hidden></div>
+        </form>
+    </section>
+
+</main>
+
+<div class="crt"></div>
+
+<script src="../shared/core.js?v=3.5"></script>
+<script src="../shared/fx.js?v=3.5"></script>
+<script src="script.js?v=3.5"></script>
 </body>
 </html>

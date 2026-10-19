@@ -1,295 +1,373 @@
-(function() {
-    let music = null;
-    let hoverSound = null;
-    let clickSound = null;
-    let musicVolume = 50;
-    let sfxVolume = 50;
+/**
+ * DUST & BLADES — main menu (v3)
+ */
+(function () {
+    'use strict';
+    const C = window.DustCore;
+    const FX = window.DustFX;
+    const M = '../media/';
+
+    let audio = null;
+    let scene = null;
     let menuOpen = false;
     let currentUsername = '';
     let currentCharacter = null;
-    
-    const menuWrapper = document.getElementById('menuWrapper');
-    const logoBox = document.getElementById('logoBox');
-    const continueBtn = document.getElementById('continueBtn');
-    const playBtn = document.getElementById('playBtn');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const leaderboardBtn = document.getElementById('leaderboardBtn');
-    const buttonsPanel = document.getElementById('buttonsPanel');
-    const settingsModal = document.getElementById('settingsModal');
-    const leaderboardModal = document.getElementById('leaderboardModal');
-    const closeSettings = document.getElementById('closeSettingsBtn');
-    const closeLeaderboard = document.getElementById('closeLeaderboardBtn');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-    const musicSlider = document.getElementById('musicVolume');
-    const sfxSlider = document.getElementById('sfxVolume');
-    const musicVal = document.getElementById('musicVolumeValue');
-    const sfxVal = document.getElementById('sfxVolumeValue');
-    const leaderboardList = document.getElementById('leaderboardList');
-    
-    const statsSidebar = document.getElementById('statsSidebar');
-    const welcomeMessage = document.getElementById('welcomeMessage');
-    const deleteUserBtn = document.getElementById('deleteUserBtn');
-    const versionInfo = document.getElementById('versionInfo');
-    const statStrength = document.getElementById('statStrength');
-    const statArmor = document.getElementById('statArmor');
-    const statGold = document.getElementById('statGold');
-    const statLevel = document.getElementById('statLevel');
-    const statPotions = document.getElementById('statPotions');
-    const expBarFill = document.getElementById('expBarFill');
-    const expCurrentSpan = document.getElementById('expCurrent');
-    const expNextSpan = document.getElementById('expNext');
-    
-    const confirmDeleteModal = document.getElementById('confirmDeleteModal');
-    const closeConfirmBtn = document.getElementById('closeConfirmBtn');
-    const confirmYesBtn = document.getElementById('confirmYesBtn');
-    const confirmNoBtn = document.getElementById('confirmNoBtn');
-    
-    // Таблица опыта
-    const expTable = {
-        1: 0, 2: 100, 3: 200, 4: 500, 5: 750,
-        6: 1000, 7: 1200, 8: 1500, 9: 2000, 10: 3000,
-        11: 4000, 12: 5000, 13: 6000, 14: 7500, 15: 9000,
-        16: 11000, 17: 13000, 18: 15000, 19: 18000, 20: 21000,
-        21: 24000, 22: 27000, 23: 30000, 24: 35000, 25: 40000
-    };
-    const MAX_LEVEL = 25;
-    
-    function getExpForNextLevel(level) {
-        if (level >= MAX_LEVEL) return expTable[MAX_LEVEL];
-        return expTable[level + 1];
-    }
-    
-    function updateExpBar() {
-        if (!currentCharacter) return;
-        const currentExp = currentCharacter.exp || 0;
-        const currentLevel = currentCharacter.level || 1;
-        const expForCurrent = expTable[currentLevel] || 0;
-        const expForNext = getExpForNextLevel(currentLevel);
-        const expNeeded = expForNext - expForCurrent;
-        const expGained = currentExp - expForCurrent;
-        const percent = Math.min(100, Math.max(0, (expGained / expNeeded) * 100));
-        
-        if (expBarFill) expBarFill.style.width = `${percent}%`;
-        if (expCurrentSpan) expCurrentSpan.textContent = currentExp;
-        if (expNextSpan) expNextSpan.textContent = expForNext;
-        if (statLevel) statLevel.textContent = currentLevel;
-    }
-    
-    // Фон
-    const bgContainer = document.getElementById('bgContainer');
-    bgContainer.innerHTML = '';
-    const bgLayer = document.createElement('div');
-    bgLayer.style.position = 'absolute';
-    bgLayer.style.top = '0';
-    bgLayer.style.left = '0';
-    bgLayer.style.width = '100%';
-    bgLayer.style.height = '100%';
-    bgLayer.style.backgroundImage = "url('../media/bg.png')";
-    bgLayer.style.backgroundRepeat = 'no-repeat';
-    bgLayer.style.backgroundSize = 'cover';
-    bgLayer.style.backgroundPosition = 'center';
-    bgLayer.style.opacity = '1';
-    bgContainer.appendChild(bgLayer);
-    
+    let hotIndex = 0;
+
+    const $ = id => document.getElementById(id);
+    const continueBtn = $('continueBtn');
+    const settingsModal = $('settingsModal');
+    const leaderboardModal = $('leaderboardModal');
+    const confirmDeleteModal = $('confirmDeleteModal');
+    const musicSlider = $('musicVolume');
+    const sfxSlider = $('sfxVolume');
+    const musicVal = $('musicVolumeValue');
+    const sfxVal = $('sfxVolumeValue');
+    const crtToggle = $('crtToggle');
+    const shakeToggle = $('shakeToggle');
+    const leaderboardList = $('leaderboardList');
+    const menuItems = Array.from(document.querySelectorAll('.menu-item'));
+
+    let savedVolumes = null;
+    let pendingDiff = 'normal';
+
+    function playHover() { if (audio) audio.playSfx('hover', 0.7); }
+    function playClick() { if (audio) audio.playSfx('click'); }
+
+    /* ---------------- data ---------------- */
     function loadUserData() {
-        const savedUser = localStorage.getItem('dust_current_user');
-        const savedChar = localStorage.getItem('dust_current_character');
-        if (savedUser && savedChar) {
-            currentUsername = savedUser;
-            currentCharacter = JSON.parse(savedChar);
-            welcomeMessage.textContent = `ПРИВЕТСТВУЕМ, ${currentUsername.toUpperCase()}`;
-            updateStatsDisplay();
-            updateExpBar();
-        } else {
-            window.location.href = '../sign-in/index.html';
+        const savedUser = C.getCurrentUser();
+        const savedChar = C.getCurrentCharacter();
+        if (!savedUser || !savedChar) {
+            window.location.replace('../sign-in/index.html');
+            return false;
         }
+        currentUsername = savedUser;
+        currentCharacter = C.normalizeCharacter(savedChar, savedUser);
+        $('welcomeMessage').textContent = 'С ВОЗВРАЩЕНИЕМ, ' + currentUsername.toUpperCase();
+        updateStatsDisplay();
+        return true;
     }
-    
+
     function updateStatsDisplay() {
-        if (currentCharacter) {
-            statStrength.textContent = currentCharacter.strength || 0;
-            statArmor.textContent = currentCharacter.armor || 0;
-            statGold.textContent = currentCharacter.gold || 0;
-            statPotions.textContent = (currentCharacter.inventory?.potions) || 0;
-            updateExpBar();
-        }
+        const ch = currentCharacter;
+        const set = (id, val) => { const n = $(id); if (n) n.textContent = val; };
+        set('heroName', ch.username.toUpperCase());
+        set('heroRank', C.getRank(ch.level || 1));
+        set('statLevel', ch.level || 1);
+        set('statStrength', ch.strength || 0);
+        set('statArmor', ch.armor || 0);
+        set('statHp', ch.maxHp || 0);
+        set('statGold', ch.gold || 0);
+        set('statPotions', ch.inventory.potions || 0);
+        set('statKills', ch.totalKills || 0);
+        set('statWins', ch.wins || 0);
+        set('statCombo', ch.bestCombo || 0);
+
+        const p = C.getExpProgress(ch.level || 1, ch.exp || 0);
+        set('expCurrent', ch.exp || 0);
+        set('expNext', ch.level >= C.MAX_LEVEL ? 'МАКС' : p.next);
+        setTimeout(() => { $('expBarFill').style.width = p.percent + '%'; }, 700);
+        $('confirmName').textContent = ch.username;
     }
-    
-    function refreshCharacterFromStorage() {
-        const savedChar = localStorage.getItem('dust_current_character');
-        if (savedChar) {
-            currentCharacter = JSON.parse(savedChar);
-            updateStatsDisplay();
-            updateExpBar();
-        }
-    }
-    
-    function deleteUser() {
-        let users = [];
-        const raw = localStorage.getItem('dust_users');
-        if (raw) {
-            try { users = JSON.parse(raw); } catch(e) {}
-        }
-        const newUsers = users.filter(u => u.username !== currentUsername);
-        localStorage.setItem('dust_users', JSON.stringify(newUsers));
-        localStorage.removeItem('dust_current_user');
-        localStorage.removeItem('dust_current_character');
-        window.location.href = '../sign-in/index.html';
-    }
-    
-    function openConfirmDelete() { playClick(); confirmDeleteModal.style.display = 'flex'; }
-    function closeConfirmDelete() { playClick(); confirmDeleteModal.style.display = 'none'; }
-    
-    function loadSounds() {
-        try {
-            music = new Audio('../media/menu.mp3');
-            music.loop = true;
-            music.volume = musicVolume / 100;
-            hoverSound = new Audio('../media/hover.mp3');
-            clickSound = new Audio('../media/click.mp3');
-        } catch(e) {}
-    }
-    
-    function playHover() {
-        if (!hoverSound) return;
-        hoverSound.currentTime = 0;
-        hoverSound.volume = sfxVolume / 100;
-        hoverSound.play().catch(() => {});
-    }
-    
-    function playClick() {
-        if (!clickSound) return;
-        clickSound.currentTime = 0;
-        clickSound.volume = sfxVolume / 100;
-        clickSound.play().catch(() => {});
-    }
-    
-    function startMusic() {
-        if (!music) return;
-        music.currentTime = 0;
-        music.volume = musicVolume / 100;
-        music.play().catch(() => {
-            const once = () => {
-                music.play().catch(() => {});
-                document.removeEventListener('click', once);
-                document.removeEventListener('keydown', once);
-            };
-            document.addEventListener('click', once);
-            document.addEventListener('keydown', once);
-        });
-    }
-    
+
+    /* ---------------- title -> hub ---------------- */
     function openMenu() {
         if (menuOpen) return;
-        playClick();
         menuOpen = true;
-        continueBtn.classList.add('hide');
-        setTimeout(() => {
-            logoBox.style.transform = 'translateY(-80px)';
-            buttonsPanel.classList.add('visible');
-            statsSidebar.classList.add('visible');
-            welcomeMessage.classList.add('visible');
-            deleteUserBtn.classList.add('visible');
-            versionInfo.classList.add('visible');
-        }, 500);
+        try { sessionStorage.setItem('dust_seen_title', '1'); } catch (_) {}
+        playClick();
+        if (audio) audio.synth('wave');
+        document.body.classList.remove('title-phase');
+        document.body.classList.add('hub-phase');
+        FX.flash('#ffb060', 260, 0.35);
+        const r = continueBtn.getBoundingClientRect();
+        scene.layer.burst(r.left + r.width / 2, r.top + r.height / 2, {
+            count: 50, speed: 220, gravity: -40, life: 1.1, sizes: [1, 1, 2],
+            colors: ['#fff2a8', '#ffc14a', '#ff7a1e'], glow: true, additive: true
+        });
+        setHot(0, true);
     }
-    
-    function loadSettings() {
-        const vm = localStorage.getItem('dust_music_volume');
-        const vs = localStorage.getItem('dust_sfx_volume');
-        if (vm !== null) musicVolume = parseInt(vm);
-        if (vs !== null) sfxVolume = parseInt(vs);
-        
-        if (musicSlider) musicSlider.value = musicVolume;
-        if (sfxSlider) sfxSlider.value = sfxVolume;
-        if (musicVal) musicVal.textContent = musicVolume + '%';
-        if (sfxVal) sfxVal.textContent = sfxVolume + '%';
-        if (music) music.volume = musicVolume / 100;
+
+    /* ---------------- keyboard menu ---------------- */
+    function setHot(i, silent) {
+        hotIndex = (i + menuItems.length) % menuItems.length;
+        menuItems.forEach((b, j) => b.classList.toggle('is-hot', j === hotIndex));
+        if (!silent && audio) audio.playSfx('hover', 0.7);
     }
-    
+
+    function anyModalOpen() {
+        return [settingsModal, leaderboardModal, confirmDeleteModal].some(m => m.classList.contains('open'));
+    }
+
+    function openModal(m) {
+        playClick();
+        m.classList.add('open');
+    }
+
+    function closeModal(m, silent) {
+        if (!m.classList.contains('open')) return;
+        if (!silent) playClick();
+        m.classList.remove('open');
+    }
+
+    /* ---------------- actions ---------------- */
+    function startGame() {
+        playClick();
+        if (audio) {
+            audio.synth('heavy');
+            audio.stopMusic(400);
+        }
+        const fig = document.querySelector('.hero-figure');
+        if (fig && fig.offsetParent) {
+            const r = fig.getBoundingClientRect();
+            fig.animate([
+                { transform: 'none', filter: 'brightness(1)' },
+                { transform: 'translateX(-14px) scaleY(.97)', filter: 'brightness(1.6)', offset: 0.35 },
+                { transform: 'translateX(60px)', filter: 'brightness(3)', opacity: 0 }
+            ], { duration: 420, easing: 'cubic-bezier(.55,0,.85,.35)', fill: 'forwards' });
+            scene.layer.slash(r.left + r.width * 0.6, r.top + r.height * 0.45, { radius: r.width * 0.45, width: 6, life: 0.3 });
+        }
+        FX.flash('#fff', 140, 0.4);
+        setTimeout(() => FX.go('../game/index.html'), 250);
+    }
+
+    function logout() {
+        playClick();
+        C.clearSession();
+        if (audio) audio.stopMusic(400);
+        FX.go('../sign-in/index.html');
+    }
+
+    function deleteUser() {
+        playClick();
+        if (audio) audio.synth('heavy');
+        const users = C.getUsers().filter(u => u.username !== currentUsername);
+        C.saveUsers(users);
+        C.clearSession();
+        const fig = document.querySelector('.hero-figure');
+        if (fig && fig.offsetParent) {
+            scene.layer.disintegrate(fig, { palette: ['#2a2a2e', '#4a4a50', '#6b4a32', '#1a1a1c'], dir: 1 });
+            fig.style.visibility = 'hidden';
+        }
+        closeModal(confirmDeleteModal, true);
+        if (audio) audio.stopMusic(800);
+        setTimeout(() => FX.go('../sign-in/index.html', 600), 900);
+    }
+
+    /* ---------------- settings ---------------- */
+    function paintRange(input) {
+        input.style.setProperty('--v', input.value + '%');
+    }
+
+    function syncSettingsUI() {
+        const vols = C.getVolumes();
+        const vis = C.getVisualSettings();
+        musicSlider.value = vols.music;
+        sfxSlider.value = vols.sfx;
+        musicVal.textContent = vols.music + '%';
+        sfxVal.textContent = vols.sfx + '%';
+        paintRange(musicSlider);
+        paintRange(sfxSlider);
+        crtToggle.checked = vis.crt;
+        shakeToggle.checked = vis.shake;
+        pendingDiff = C.getDifficulty();
+        document.querySelectorAll('#diffSeg button').forEach(b => b.classList.toggle('active', b.dataset.diff === pendingDiff));
+    }
+
+    function openSettings() {
+        savedVolumes = C.getVolumes();
+        syncSettingsUI();
+        openModal(settingsModal);
+    }
+
+    /** Closing without saving reverts the live preview */
+    function cancelSettings() {
+        if (savedVolumes && audio) {
+            audio.setMusicVolume(savedVolumes.music);
+            audio.setSfxVolume(savedVolumes.sfx);
+        }
+        C.applyVisualSettings();
+        closeModal(settingsModal);
+    }
+
     function saveSettings() {
-        localStorage.setItem('dust_music_volume', musicVolume);
-        localStorage.setItem('dust_sfx_volume', sfxVolume);
-        if (music) music.volume = musicVolume / 100;
+        C.saveVolumes(parseInt(musicSlider.value, 10), parseInt(sfxSlider.value, 10));
+        C.saveVisualSettings({ crt: crtToggle.checked, shake: shakeToggle.checked });
+        C.setDifficulty(pendingDiff);
+        savedVolumes = null;
+        if (audio) audio.playSfx('upgrade', 0.6);
+        closeModal(settingsModal, true);
     }
-    
+
+    /* ---------------- leaderboard ---------------- */
     function getLeaderboard() {
-        const raw = localStorage.getItem('dust_users');
-        if (!raw) return [];
-        try {
-            const users = JSON.parse(raw);
-            const list = users.map(u => ({ username: u.username, kills: u.character?.totalKills || 0 }));
-            list.sort((a,b) => b.kills - a.kills);
-            return list.slice(0, 10);
-        } catch(e) { return []; }
+        return C.getUsers()
+            .map(u => ({
+                username: u.username,
+                kills: (u.character && u.character.totalKills) || 0,
+                level: (u.character && u.character.level) || 1,
+                wins: (u.character && u.character.wins) || 0
+            }))
+            .sort((a, b) => b.kills - a.kills || b.wins - a.wins || b.level - a.level)
+            .slice(0, 10);
     }
-    
+
     function showLeaderboard() {
         const leaders = getLeaderboard();
         if (!leaders.length) {
-            leaderboardList.innerHTML = 'НЕТ ДАННЫХ';
-            return;
+            leaderboardList.innerHTML = '<div class="lb-empty">ПОКА НЕТ ЗАПИСЕЙ</div>';
+        } else {
+            leaderboardList.innerHTML = leaders.map((l, i) =>
+                '<div class="lb-row' + (l.username === currentUsername ? ' me' : '') + '" style="animation-delay:' + (i * 0.05) + 's">' +
+                '<span>' + (i < 3 ? '<i class="medal m' + (i + 1) + '">' + (i + 1) + '</i>' : (i + 1)) + '</span>' +
+                '<span>' + C.escapeHtml(l.username) + '</span>' +
+                '<span>' + l.level + '</span>' +
+                '<span>' + l.kills + '</span>' +
+                '<span>' + l.wins + '</span>' +
+                '</div>'
+            ).join('');
         }
-        let html = '';
-        leaders.forEach((l, i) => {
-            html += `<div style="display:grid;grid-template-columns:60px 1fr 80px;padding:10px;border-bottom:1px solid #4a3f2c;text-align:center;">
-                        <span>${i+1}</span><span>${l.username}</span><span>${l.kills}</span>
-                     </div>`;
-        });
-        leaderboardList.innerHTML = html;
+        openModal(leaderboardModal);
     }
-    
-    function startGame() { playClick(); window.location.href = '../game/index.html'; }
-    function openSettingsModal() { playClick(); settingsModal.style.display = 'flex'; }
-    function closeSettingsModal() { playClick(); settingsModal.style.display = 'none'; }
-    function openLeaderboardModal() { playClick(); showLeaderboard(); leaderboardModal.style.display = 'flex'; }
-    function closeLeaderboardModal() { playClick(); leaderboardModal.style.display = 'none'; }
-    
+
+    /* ---------------- wiring ---------------- */
+    function loadAudio() {
+        audio = C.createAudioManager();
+        const vols = C.getVolumes();
+        audio.setMusicVolume(vols.music);
+        audio.setSfxVolume(vols.sfx);
+        audio.loadMusic('menu', M + C.MEDIA.menu, true);
+        audio.loadSfx('hover', M + C.MEDIA.hover, 3);
+        audio.loadSfx('click', M + C.MEDIA.click, 3);
+        audio.loadSfx('upgrade', M + C.MEDIA.upgrade, 1);
+    }
+
     function bindEvents() {
         continueBtn.addEventListener('click', openMenu);
-        playBtn.addEventListener('click', startGame);
-        settingsBtn.addEventListener('click', openSettingsModal);
-        leaderboardBtn.addEventListener('click', openLeaderboardModal);
-        closeSettings.addEventListener('click', closeSettingsModal);
-        closeLeaderboard.addEventListener('click', closeLeaderboardModal);
-        deleteUserBtn.addEventListener('click', openConfirmDelete);
-        closeConfirmBtn.addEventListener('click', closeConfirmDelete);
-        confirmYesBtn.addEventListener('click', deleteUser);
-        confirmNoBtn.addEventListener('click', closeConfirmDelete);
-        
-        settingsModal.addEventListener('click', e => { if (e.target === settingsModal) closeSettingsModal(); });
-        leaderboardModal.addEventListener('click', e => { if (e.target === leaderboardModal) closeLeaderboardModal(); });
-        confirmDeleteModal.addEventListener('click', e => { if (e.target === confirmDeleteModal) closeConfirmDelete(); });
-        
-        if (musicSlider) {
-            musicSlider.addEventListener('input', e => {
-                musicVolume = parseInt(e.target.value);
-                musicVal.textContent = musicVolume + '%';
-                if (music) music.volume = musicVolume / 100;
+        $('titleScreen').addEventListener('click', openMenu);
+
+        const actions = {
+            playBtn: startGame,
+            leaderboardBtn: showLeaderboard,
+            settingsBtn: openSettings,
+            logoutBtn: logout
+        };
+        menuItems.forEach((btn, i) => {
+            btn.addEventListener('mouseenter', () => { if (hotIndex !== i) setHot(i); });
+            btn.addEventListener('focus', () => { if (hotIndex !== i) setHot(i, true); });
+            btn.addEventListener('click', () => actions[btn.id]());
+        });
+
+        $('deleteUserBtn').addEventListener('click', () => openModal(confirmDeleteModal));
+        $('deleteUserBtn').addEventListener('mouseenter', playHover);
+        $('closeConfirmBtn').addEventListener('click', () => closeModal(confirmDeleteModal));
+        $('confirmNoBtn').addEventListener('click', () => closeModal(confirmDeleteModal));
+        $('confirmYesBtn').addEventListener('click', deleteUser);
+        $('closeSettingsBtn').addEventListener('click', cancelSettings);
+        $('saveSettingsBtn').addEventListener('click', saveSettings);
+        $('closeLeaderboardBtn').addEventListener('click', () => closeModal(leaderboardModal));
+
+        [settingsModal, leaderboardModal, confirmDeleteModal].forEach(m => {
+            m.addEventListener('click', e => {
+                if (e.target !== m) return;
+                if (m === settingsModal) cancelSettings();
+                else closeModal(m);
             });
-        }
-        if (sfxSlider) {
-            sfxSlider.addEventListener('input', e => {
-                sfxVolume = parseInt(e.target.value);
-                sfxVal.textContent = sfxVolume + '%';
+            m.querySelectorAll('button').forEach(b => b.addEventListener('mouseenter', playHover));
+        });
+
+        musicSlider.addEventListener('input', () => {
+            const v = parseInt(musicSlider.value, 10);
+            musicVal.textContent = v + '%';
+            paintRange(musicSlider);
+            if (audio) audio.setMusicVolume(v);
+        });
+        sfxSlider.addEventListener('input', () => {
+            const v = parseInt(sfxSlider.value, 10);
+            sfxVal.textContent = v + '%';
+            paintRange(sfxSlider);
+            if (audio) audio.setSfxVolume(v);
+        });
+        sfxSlider.addEventListener('change', playClick);
+        // ВЫКЛ always switches off and ВКЛ always switches on (not a blind flip)
+        document.querySelectorAll('.px-switch').forEach(sw => {
+            const input = sw.querySelector('input');
+            sw.querySelectorAll('.sw-off, .sw-on').forEach(half => {
+                half.addEventListener('click', e => {
+                    e.preventDefault();
+                    const on = half.classList.contains('sw-on');
+                    if (input.checked === on) return;
+                    input.checked = on;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                });
             });
-        }
-        
-        saveSettingsBtn.addEventListener('click', () => { playClick(); saveSettings(); closeSettingsModal(); });
-        
-        document.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('mouseenter', playHover);
+        });
+        crtToggle.addEventListener('change', () => {
+            playClick();
+            document.documentElement.classList.toggle('no-crt', !crtToggle.checked);
+        });
+        shakeToggle.addEventListener('change', () => {
+            playClick();
+            document.documentElement.classList.toggle('no-shake', !shakeToggle.checked);
+            if (shakeToggle.checked) FX.shake(settingsModal.firstElementChild, 6);
+        });
+        document.querySelectorAll('#diffSeg button').forEach(b => {
+            b.addEventListener('click', () => {
+                playClick();
+                pendingDiff = b.dataset.diff;
+                document.querySelectorAll('#diffSeg button').forEach(x => x.classList.toggle('active', x === b));
+            });
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.repeat) return;
+            if (!menuOpen) {
+                if (e.key !== 'Tab' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    e.preventDefault();
+                    openMenu();
+                }
+                return;
+            }
+            if (e.key === 'Escape') {
+                if (settingsModal.classList.contains('open')) cancelSettings();
+                else if (leaderboardModal.classList.contains('open')) closeModal(leaderboardModal);
+                else if (confirmDeleteModal.classList.contains('open')) closeModal(confirmDeleteModal);
+                return;
+            }
+            if (anyModalOpen()) return;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'ы') { e.preventDefault(); setHot(hotIndex + 1); }
+            else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'ц') { e.preventDefault(); setHot(hotIndex - 1); }
+            else if (e.key === 'Enter' || e.key === ' ') {
+                if (document.activeElement && document.activeElement.classList.contains('menu-item')) return;
+                e.preventDefault();
+                menuItems[hotIndex].click();
+            }
         });
     }
-    
-    function init() {
-        loadUserData();
-        loadSettings();
-        loadSounds();
-        bindEvents();
-        startMusic();
-        refreshCharacterFromStorage();
+
+    function seenTitle() {
+        try { return sessionStorage.getItem('dust_seen_title') === '1'; } catch (_) { return false; }
     }
-    
+
+    function init() {
+        if (!loadUserData()) return;
+        $('versionInfo').textContent = 'ПАТЧ ' + C.VERSION;
+        scene = window.DustDungeon.build(document.body);
+        FX.enter();
+        FX.prepareSprite('../media/px/sprites/hero/idle.png');
+        loadAudio();
+        bindEvents();
+        audio.startMusic('menu');
+
+        // Coming back from a battle skips the title card
+        if (seenTitle()) {
+            menuOpen = true;
+            document.body.classList.remove('title-phase');
+            document.body.classList.add('hub-phase');
+            setHot(0, true);
+        }
+    }
+
     init();
 })();

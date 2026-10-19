@@ -1,0 +1,15 @@
+# local editor / tool settings
+.vscode/
+.idea/
+
+# python cache
+__pycache__/
+*.pyc
+
+# experiments that are not part of the game
+tools/spritegen/
+
+# OS junk
+Thumbs.db
+desktop.ini
+.DS_Store

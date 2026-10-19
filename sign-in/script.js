@@ -1,262 +1,184 @@
-// DUST & BLADES - СТРАНИЦА ВХОДА/РЕГИСТРАЦИИ
-(function() {
-    // ========== ЗВУКИ ==========
-    let hoverSound = null;
-    let clickSound = null;
-    let soundEnabled = true;
-    
-    // Пытаемся загрузить звуки (если файлы есть)
-    try {
-        hoverSound = new Audio('../media/hover.mp3');
-        hoverSound.volume = 0.5;
-        clickSound = new Audio('../media/click.mp3');
-        clickSound.volume = 0.5;
-        // Предзагрузка для более быстрой реакции
-        hoverSound.load();
-        clickSound.load();
-    } catch(e) {
-        soundEnabled = false;
-    }
-    
-    function playHover() {
-        if (!soundEnabled) return;
-        if (!hoverSound) return;
-        hoverSound.currentTime = 0;
-        hoverSound.play().catch(() => {});
-    }
-    
-    function playClick() {
-        if (!soundEnabled) return;
-        if (!clickSound) return;
-        clickSound.currentTime = 0;
-        clickSound.play().catch(() => {});
-    }
-    
-    // ========== ПОЛУЧАЕМ ЭЛЕМЕНТЫ ==========
+/**
+ * DUST & BLADES — sign-in / register (v3)
+ */
+(function () {
+    'use strict';
+    const C = window.DustCore;
+    const FX = window.DustFX;
+    const M = '../media/';
+
+    let audio = null;
+    let scene = null;
+
+    const $ = id => document.getElementById(id);
+    const tabs = document.querySelector('.tabs');
     const loginTabBtn = document.querySelector('[data-tab="login"]');
     const registerTabBtn = document.querySelector('[data-tab="register"]');
-    const loginTab = document.getElementById('loginTab');
-    const registerTab = document.getElementById('registerTab');
-    
-    const doLoginBtn = document.getElementById('doLogin');
-    const doRegisterBtn = document.getElementById('doRegister');
-    
-    const loginErrorDiv = document.getElementById('loginError');
-    const regErrorDiv = document.getElementById('regError');
-    
-    const loginUsername = document.getElementById('loginUsername');
-    const loginPassword = document.getElementById('loginPassword');
-    const regUsername = document.getElementById('regUsername');
-    const regPassword = document.getElementById('regPassword');
-    const regPassword2 = document.getElementById('regPassword2');
-    
-    // ========== ВСЕ КНОПКИ ДЛЯ ЗВУКОВ ==========
-    const allButtons = [loginTabBtn, registerTabBtn, doLoginBtn, doRegisterBtn];
-    
-    // Навешиваем звук наведения
-    allButtons.forEach(btn => {
-        if (btn) {
-            btn.addEventListener('mouseenter', playHover);
-        }
-    });
-    
-    // ========== ФУНКЦИИ ОШИБОК ==========
-    function showError(element, message) {
-        element.textContent = message;
-        element.style.display = 'block';
-        // Автоматически скрываем ошибку через 4 секунды
-        setTimeout(() => {
-            if (element.style.display === 'block') {
-                element.style.display = 'none';
-            }
-        }, 4000);
+    const loginTab = $('loginTab');
+    const registerTab = $('registerTab');
+    const loginErrorDiv = $('loginError');
+    const regErrorDiv = $('regError');
+    const loginUsername = $('loginUsername');
+    const loginPassword = $('loginPassword');
+    const regUsername = $('regUsername');
+    const regPassword = $('regPassword');
+    const regPassword2 = $('regPassword2');
+    const panel = document.querySelector('.auth');
+
+    function playHover() { if (audio) audio.playSfx('hover', 0.7); }
+    function playClick() { if (audio) audio.playSfx('click'); }
+
+    let errTimer = 0;
+    function showError(element, message, field) {
+        element.textContent = '✖ ' + message;
+        element.hidden = false;
+        element.classList.remove('shake-err');
+        void element.offsetWidth;
+        element.classList.add('shake-err');
+        FX.shake(panel, 5);
+        if (audio) audio.synth('block');
+        if (field) field.focus();
+        clearTimeout(errTimer);
+        errTimer = setTimeout(() => { element.hidden = true; }, 4500);
     }
-    
+
     function hideError(element) {
-        element.style.display = 'none';
+        element.hidden = true;
         element.textContent = '';
     }
-    
-    // ========== РАБОТА С LOCALSTORAGE ==========
-    function getUsers() {
-        const usersRaw = localStorage.getItem('dust_users');
-        if (!usersRaw) return [];
-        try { return JSON.parse(usersRaw); }
-        catch(e) { return []; }
-    }
-    
-    function saveUsers(users) {
-        localStorage.setItem('dust_users', JSON.stringify(users));
-    }
-    
+
     function findUserByName(username) {
-        const users = getUsers();
-        return users.find(user => user.username === username);
+        return C.getUsers().find(user => user.username === username);
     }
-    
-    function hashPassword(password) {
-        let hash = 0;
-        for (let i = 0; i < password.length; i++) {
-            hash = ((hash << 5) - hash) + password.charCodeAt(i);
-            hash |= 0;
+
+    /** Burn-away animation + embers burst, then go to the menu */
+    function enterMenu() {
+        const r = panel.getBoundingClientRect();
+        panel.classList.add('sealed');
+        if (audio) audio.playSfx('upgrade', 0.9);
+        for (let i = 0; i < 5; i++) {
+            scene.layer.burst(r.left + r.width * Math.random(), r.top + r.height * Math.random(), {
+                count: 26, speed: 140, gravity: -60, life: 1.2,
+                colors: ['#fff2a8', '#ffc14a', '#ff7a1e', '#c8321a'], glow: true, additive: true
+            });
         }
-        return 'hash_' + Math.abs(hash).toString(16);
+        setTimeout(() => FX.go('../main-menu/index.html'), 380);
     }
-    
-    function createNewCharacter(username) {
-        return {
-            username: username,
-            level: 1,
-            exp: 0,
-            expToNext: 100,
-            strength: 10,
-            maxHp: 100,
-            currentHp: 100,
-            armor: 0,
-            gold: 50,
-            totalKills: 0,
-            inventory: { potions: 3 },
-            difficulty: 'normal'
-        };
-    }
-    
-    function setCurrentSession(username, characterData) {
-        localStorage.setItem('dust_current_user', username);
-        localStorage.setItem('dust_current_character', JSON.stringify(characterData));
-    }
-    
-    // ========== РЕГИСТРАЦИЯ ==========
-    function registerUser() {
+
+    function registerUser(e) {
+        if (e) e.preventDefault();
         playClick();
         hideError(regErrorDiv);
-        
+
         const username = regUsername.value.trim();
         const password = regPassword.value;
         const password2 = regPassword2.value;
-        
-        if (!username) {
-            showError(regErrorDiv, 'Имя героя не может быть пустым!');
-            return;
+
+        if (!username) return showError(regErrorDiv, 'Введите имя', regUsername);
+        if (username.length < 2) return showError(regErrorDiv, 'Имя должно быть длиннее 1 символа', regUsername);
+        if (username.length > 20) return showError(regErrorDiv, 'Имя слишком длинное (макс 20)', regUsername);
+        if (!/^[a-zA-Zа-яА-ЯёЁ0-9_\-]+$/.test(username)) {
+            return showError(regErrorDiv, 'Только буквы, цифры, _ и -', regUsername);
         }
-        if (username.length < 2) {
-            showError(regErrorDiv, 'Имя должно быть длиннее 1 символа');
-            return;
-        }
-        if (username.length > 20) {
-            showError(regErrorDiv, 'Имя слишком длинное (макс 20)');
-            return;
-        }
-        if (!password) {
-            showError(regErrorDiv, 'Введи пароль!');
-            return;
-        }
-        if (password !== password2) {
-            showError(regErrorDiv, 'Пароли не совпадают!');
-            return;
-        }
-        if (password.length < 3) {
-            showError(regErrorDiv, 'Пароль минимум 3 символа');
-            return;
-        }
-        
-        const existing = findUserByName(username);
-        if (existing) {
-            showError(regErrorDiv, 'Воин с таким именем уже существует!');
-            return;
-        }
-        
-        const hashedPass = hashPassword(password);
-        const newCharacter = createNewCharacter(username);
-        
-        const newUser = {
-            username: username,
-            passwordHash: hashedPass,
+        if (!password) return showError(regErrorDiv, 'Введите пароль', regPassword);
+        if (password.length < 3) return showError(regErrorDiv, 'Пароль минимум 3 символа', regPassword);
+        if (password !== password2) return showError(regErrorDiv, 'Пароли не совпадают', regPassword2);
+        if (findUserByName(username)) return showError(regErrorDiv, 'Это имя уже занято', regUsername);
+
+        const newCharacter = C.createCharacter(username);
+        const users = C.getUsers();
+        users.push({
+            username,
+            passwordHash: C.hashPassword(password),
             character: newCharacter,
             createdAt: new Date().toISOString()
-        };
-        
-        const users = getUsers();
-        users.push(newUser);
-        saveUsers(users);
-        
-        setCurrentSession(username, newCharacter);
-        window.location.href = '../main-menu/index.html';
+        });
+        C.saveUsers(users);
+        C.setSession(username, newCharacter);
+        enterMenu();
     }
-    
-    // ========== ВХОД ==========
-    function loginUser() {
+
+    function loginUser(e) {
+        if (e) e.preventDefault();
         playClick();
         hideError(loginErrorDiv);
-        
+
         const username = loginUsername.value.trim();
         const password = loginPassword.value;
-        
-        if (!username || !password) {
-            showError(loginErrorDiv, 'Заполни имя и пароль!');
-            return;
-        }
-        
+
+        if (!username) return showError(loginErrorDiv, 'Введите имя', loginUsername);
+        if (!password) return showError(loginErrorDiv, 'Введите пароль', loginPassword);
+
         const user = findUserByName(username);
-        if (!user) {
-            showError(loginErrorDiv, 'Такого воина нет! Зарегистрируйся.');
-            return;
+        if (!user) return showError(loginErrorDiv, 'Такого игрока нет', loginUsername);
+        if (user.passwordHash !== C.hashPassword(password)) {
+            loginPassword.value = '';
+            return showError(loginErrorDiv, 'Неверный пароль', loginPassword);
         }
-        
-        const hashedInput = hashPassword(password);
-        if (user.passwordHash !== hashedInput) {
-            showError(loginErrorDiv, 'Неверный пароль!');
-            return;
+
+        // Migrate old characters to new defaults if missing fields
+        const character = C.normalizeCharacter(user.character, username);
+        character.username = username;
+
+        C.setSession(username, character);
+        const users = C.getUsers();
+        const idx = users.findIndex(u => u.username === username);
+        if (idx !== -1) {
+            users[idx].character = character;
+            C.saveUsers(users);
         }
-        
-        const characterData = user.character;
-        setCurrentSession(username, characterData);
-        window.location.href = '../main-menu/index.html';
+        enterMenu();
     }
-    
-    // ========== ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ==========
+
     function switchTab(tabName) {
+        const isLogin = tabName === 'login';
+        if (loginTab.classList.contains('active') === isLogin) return;
         playClick();
         hideError(loginErrorDiv);
         hideError(regErrorDiv);
-        
-        // Очищаем поля при переключении
-        if (tabName === 'login') {
-            loginTab.classList.add('active');
-            registerTab.classList.remove('active');
-            loginTabBtn.classList.add('active');
-            registerTabBtn.classList.remove('active');
-            // Очистка полей регистрации
-            regUsername.value = '';
-            regPassword.value = '';
-            regPassword2.value = '';
-        } else {
-            loginTab.classList.remove('active');
-            registerTab.classList.add('active');
-            loginTabBtn.classList.remove('active');
-            registerTabBtn.classList.add('active');
-            // Очистка полей входа
-            loginUsername.value = '';
-            loginPassword.value = '';
-        }
+
+        loginTab.classList.toggle('active', isLogin);
+        registerTab.classList.toggle('active', !isLogin);
+        loginTabBtn.classList.toggle('active', isLogin);
+        registerTabBtn.classList.toggle('active', !isLogin);
+        tabs.classList.toggle('reg', !isLogin);
+
+        (isLogin ? loginUsername : regUsername).focus();
     }
-    
-    // ========== НАВЕШИВАЕМ ОБРАБОТЧИКИ ==========
-    doLoginBtn.addEventListener('click', loginUser);
-    doRegisterBtn.addEventListener('click', registerUser);
-    
-    loginTabBtn.addEventListener('click', () => switchTab('login'));
-    registerTabBtn.addEventListener('click', () => switchTab('register'));
-    
-    function onEnterPress(event, callback) {
-        if (event.key === 'Enter') {
-            playClick();
-            callback();
+
+    function init() {
+        // Already logged in → skip to menu
+        if (C.getCurrentUser() && C.getCurrentCharacter()) {
+            window.location.replace('../main-menu/index.html');
+            return;
         }
+
+        // plain black gate: no dungeon backdrop, only a few embers around the panel
+        scene = { layer: FX.createLayer({ z: 1 }) };
+        FX.enter();
+
+        // no music here — it starts in the main menu
+        audio = C.createAudioManager();
+        const vols = C.getVolumes();
+        audio.setSfxVolume(vols.sfx);
+        audio.loadSfx('hover', M + C.MEDIA.hover, 2);
+        audio.loadSfx('click', M + C.MEDIA.click, 2);
+        audio.loadSfx('upgrade', M + C.MEDIA.upgrade, 1);
+
+        document.querySelectorAll('button').forEach(btn => btn.addEventListener('mouseenter', playHover));
+
+        loginTab.addEventListener('submit', loginUser);
+        registerTab.addEventListener('submit', registerUser);
+        loginTabBtn.addEventListener('click', () => switchTab('login'));
+        registerTabBtn.addEventListener('click', () => switchTab('register'));
+
+        // quiet typewriter clicks
+        document.querySelectorAll('.px-input').forEach(inp => {
+            inp.addEventListener('input', () => audio.synth('type'));
+        });
+
+        setTimeout(() => loginUsername.focus(), 700);
     }
-    
-    loginPassword.addEventListener('keypress', (e) => onEnterPress(e, loginUser));
-    loginUsername.addEventListener('keypress', (e) => onEnterPress(e, loginUser));
-    regPassword.addEventListener('keypress', (e) => onEnterPress(e, registerUser));
-    regPassword2.addEventListener('keypress', (e) => onEnterPress(e, registerUser));
-    regUsername.addEventListener('keypress', (e) => onEnterPress(e, registerUser));
+
+    init();
 })();

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DUST & BLADES</title>
+    <link rel="shortcut icon" href="media/icon.ico" type="image/x-icon">
+    <style>
+        body { margin: 0; background: #07050a; color: #e9b949; font: 12px monospace; display: grid; place-items: center; min-height: 100vh; letter-spacing: 2px; }
+    </style>
+    <script>
+        (function () {
+            try {
+                var user = localStorage.getItem('dust_current_user');
+                var char = localStorage.getItem('dust_current_character');
+                location.replace(user && char ? 'main-menu/index.html' : 'sign-in/index.html');
+            } catch (e) {
+                location.replace('sign-in/index.html');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <p>ЗАГРУЗКА…</p>
+</body>
+</html>
