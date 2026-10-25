@@ -69,10 +69,13 @@
         let W = 0, H = 0;
         let snap = PX; // device pixels per logical "fat pixel"
 
-        // Full-resolution backing store, logical units of PX css-px:
-        // particles stay chunky but move smoothly instead of hopping 3px at a time.
+        // Backing store finer than a fat pixel, so particles stay chunky but move smoothly,
+        // yet never above ~1920x1080: on 2K/4K screens a full-size canvas cleared every frame
+        // costs a lot (worst while the screen is being captured or streamed) for no visible gain.
+        const MAX_PIXELS = 1920 * 1080;
         function resize() {
-            const dpr = Math.min(2, global.devicePixelRatio || 1);
+            const full = Math.min(2, global.devicePixelRatio || 1);
+            const dpr = Math.min(full, Math.sqrt(MAX_PIXELS / Math.max(1, global.innerWidth * global.innerHeight)));
             W = Math.ceil(global.innerWidth / PX);
             H = Math.ceil(global.innerHeight / PX);
             canvas.width = Math.round(global.innerWidth * dpr);
@@ -418,6 +421,17 @@
                 streak: Math.random() < 0.4,
                 color: pick(['#d8b878', '#c49a58', '#e8d0a0', '#a07840'])
             }));
+        },
+        /** Slanted storm rain */
+        rain(layer, rate) {
+            return layer.emitter(rate || 60, (W, H) => ({
+                x: rand(-W * 0.1, W * 1.1), y: rand(-20, -4),
+                vx: rand(-120, -80), vy: rand(520, 680),
+                life: rand(1, 1.8), fadeAt: 0.85,
+                size: 1,
+                streak: true,
+                color: pick(['#8fa8d8', '#6a84b8', '#b8c8ee'])
+            }));
         }
     };
 
@@ -541,5 +555,28 @@
         }
     });
 
-    global.DustFX = { PX, createLayer, prepareSprite, ambient, shake, flash, parallax, enter, go, rand, pick, reduced };
+    /** Looping silent video over a picture backdrop. The picture stays underneath until the video plays. */
+    function backdropVideo(host, src) {
+        if (!host || reduced) return null;
+        const v = document.createElement('video');
+        v.className = 'stage-video';
+        v.muted = true;
+        v.loop = true;
+        v.playsInline = true;
+        v.autoplay = true;
+        v.preload = 'auto';
+        v.setAttribute('muted', '');
+        v.setAttribute('playsinline', '');
+        v.setAttribute('aria-hidden', 'true');
+        v.addEventListener('playing', () => v.classList.add('ready'), { once: true });
+        v.src = src;
+        host.appendChild(v);
+        const play = () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+        play();
+        // no decoding while the tab is in the background
+        document.addEventListener('visibilitychange', () => { if (document.hidden) v.pause(); else play(); });
+        return v;
+    }
+
+    global.DustFX = { PX, createLayer, prepareSprite, ambient, shake, flash, parallax, enter, go, backdropVideo, rand, pick, reduced };
 })(window);

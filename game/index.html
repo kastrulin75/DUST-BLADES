@@ -18,9 +18,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Tiny5&display=swap" rel="stylesheet">
-    <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../shared/theme.css?v=3.5">
-    <link rel="stylesheet" href="style.css?v=3.5">
+    <link rel="shortcut icon" href="../media/images/icon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../shared/theme.css?v=4.0">
+    <link rel="stylesheet" href="style.css?v=4.0">
 </head>
 <body>
 <div id="fxCurtain"></div>
@@ -29,7 +29,7 @@
     <!-- ===== backdrop ===== -->
     <div class="stage" id="stage">
         <div class="stage-box" id="stageBox">
-            <div class="stage-img desert" style="background-image:url('../media/px/desert_dusk.jpg')"></div>
+            <div class="stage-img desert" style="background-image:url('../media/images/desert_dusk.jpg')"></div>
             <div class="sun-glow"></div>
             <div class="dusk"></div>
         </div>
@@ -38,10 +38,11 @@
 
     <!-- ===== arena ===== -->
     <div class="arena" id="arena">
-        <div class="hero" id="hero">
+        <div class="hero" id="hero" data-pose="idle">
             <div class="unit-shadow"></div>
             <div class="hero-aura" id="heroAura"></div>
-            <img src="../media/px/sprites/hero/idle.png" alt="Герой" id="heroImg" class="hero-sprite" decoding="async">
+            <img src="../media/sprites/hero/idle.png" alt="Герой" id="heroImg" class="hero-sprite" decoding="async">
+            <img src="../media/sprites/hero/ult.webp" alt="" id="heroUlt" class="hero-ult" decoding="async">
         </div>
         <div class="foes" id="enemiesContainer"></div>
     </div>
@@ -52,15 +53,15 @@
         <div class="hud-bars">
             <div class="hud-name"><span id="heroName">ГЕРОЙ</span><span class="hud-rank" id="heroRank"></span></div>
             <div class="bar-row">
-                <img src="../media/px/icons/heart.png" alt="HP">
+                <img src="../media/icons/heart.png" alt="HP">
                 <div class="px-bar hp" id="heroHpBar"><div class="ghost" id="heroHpGhost"></div><div class="fill" id="heroHpFill"></div><span class="txt" id="heroHpText"></span></div>
             </div>
             <div class="bar-row">
-                <img src="../media/px/icons/strength.png" alt="Ярость">
+                <img src="../media/icons/ult.png" alt="Ярость">
                 <div class="px-bar rage" id="rageBar"><div class="fill" id="rageFill" style="width:0"></div><span class="txt" id="rageText">ЯРОСТЬ 0</span></div>
             </div>
             <div class="bar-row thin">
-                <img src="../media/px/icons/exp.png" alt="Опыт">
+                <img src="../media/icons/exp.png" alt="Опыт">
                 <div class="px-bar exp"><div class="fill" id="expBarFill" style="width:0"></div></div>
                 <span class="exp-num"><span id="expCurrent">0</span>/<span id="expNext">100</span></span>
             </div>
@@ -69,7 +70,7 @@
 
     <!-- ===== HUD: wave ===== -->
     <div class="hud-wave" id="wavePanel">
-        <div class="wave-title" id="waveBadge">ВОЛНА I</div>
+        <div class="wave-title" id="waveBadge">ВОЛНА 1</div>
         <div class="wave-pips" id="wavePips"><i></i><i></i><i></i></div>
         <div class="wave-sub"><span id="enemiesCount">ВРАГОВ: 0</span> · <span id="diffBadge" class="diff-badge">НОРМА</span></div>
         <div class="turn-banner" id="turnBanner" hidden></div>
@@ -77,37 +78,36 @@
 
     <!-- ===== HUD: resources ===== -->
     <div class="hud-res">
-        <div class="res px-inset" id="goldBox"><img src="../media/px/icons/gold.png" alt="Золото"><b id="heroGold">0</b></div>
-        <div class="res px-inset"><img src="../media/px/icons/armor.png" alt="Броня"><b id="heroArmor">0</b></div>
-        <div class="res px-inset"><img src="../media/px/icons/strength.png" alt="Сила"><b id="heroStrength">0</b></div>
-        <button class="px-btn icon-btn" id="shopBtn" type="button" title="Торговец [S]"><img src="../media/px/icons/shop.png" class="ico" alt="Магазин"></button>
-        <button class="px-btn icon-btn" id="menuBtn" type="button" title="Меню [Esc]"><img src="../media/px/icons/exit.png" class="ico" alt="Меню"></button>
+        <div class="res px-inset" id="goldBox"><img src="../media/icons/gold.png" alt="Золото"><b id="heroGold">0</b></div>
+        <div class="res px-inset"><img src="../media/icons/strength.png" alt="Сила"><b id="heroStrength">0</b></div>
+        <button class="px-btn icon-btn" id="shopBtn" type="button" title="Торговец [S]"><img src="../media/icons/shop.png" class="ico" alt="Магазин"><span class="shop-bubble" aria-hidden="true">!</span></button>
+        <button class="px-btn icon-btn" id="menuBtn" type="button" title="Меню [Esc]"><img src="../media/icons/exit.png" class="ico" alt="Меню"></button>
     </div>
 
     <!-- ===== bottom command bar ===== -->
     <div class="command">
         <div class="px-panel glass log-panel">
-            <div class="log-title"><img src="../media/px/icons/wait.png" alt="">ЖУРНАЛ БОЯ</div>
+            <div class="log-title"><img src="../media/icons/wait.png" alt="">ЖУРНАЛ БОЯ</div>
             <ul class="log" id="combatLog"></ul>
         </div>
         <div class="px-panel glass actions">
             <button class="px-btn act" id="attackBtn" type="button">
-                <img src="../media/px/icons/attack.png" class="ico" alt="">
+                <img src="../media/icons/attack.png" class="ico" alt="">
                 <span class="act-name">АТАКА</span>
                 <span class="px-key">SPACE</span>
             </button>
             <button class="px-btn act rage-act" id="rageBtn" type="button">
-                <img src="../media/px/icons/strength.png" class="ico" alt="">
-                <span class="act-name">ВИХРЬ</span>
+                <img src="../media/icons/ult.png" class="ico" alt="">
+                <span class="act-name">УЛЬТИМЕЙТ</span>
                 <span class="px-key">R</span>
             </button>
             <button class="px-btn act" id="defendBtn" type="button">
-                <img src="../media/px/icons/armor.png" class="ico" alt="">
+                <img src="../media/icons/armor.png" class="ico" alt="">
                 <span class="act-name">ЗАЩИТА</span>
                 <span class="px-key">D</span>
             </button>
             <button class="px-btn act" id="potionBtn" type="button">
-                <img src="../media/px/icons/potion.png" class="ico" alt="">
+                <img src="../media/icons/potion.png" class="ico" alt="">
                 <span class="act-name">ЗЕЛЬЕ</span>
                 <span class="px-key">P</span>
                 <span class="count" id="heroPotions">0</span>
@@ -116,6 +116,17 @@
     </div>
 
     <div class="combo" id="comboBox" hidden><b id="comboNum">3</b><span>КОМБО</span></div>
+
+    <!-- attack timing bar (Undertale-style): stop the line in the centre -->
+    <div class="timing" id="timing" hidden>
+        <div class="timing-track" id="timingTrack">
+            <i class="tz tz-perfect"></i>
+            <div class="timing-line" id="timingLine"></div>
+        </div>
+        <div class="timing-hint" id="timingHint"><span class="px-key">SPACE</span> / КЛИК — БЕЙ В ЦЕНТР</div>
+        <div class="timing-count" id="timingCount" hidden></div>
+        <div class="timing-rate" id="timingRate"></div>
+    </div>
     <div class="low-hp-vignette"></div>
 </div>
 
@@ -134,7 +145,7 @@
 <!-- ===== choose enemy ===== -->
 <div id="mobTypeModal" class="px-modal">
     <div class="px-panel choose">
-        <div class="modal-head px-title"><img src="../media/px/icons/skull.png" alt="">ВЫБЕРИ ИСПЫТАНИЕ</div>
+        <div class="modal-head px-title"><img src="../media/icons/skull.png" alt="">ВЫБЕРИ ИСПЫТАНИЕ</div>
         <div class="choose-sub">3 волны, каждая сильнее предыдущей.</div>
         <div class="px-divider"></div>
 
@@ -148,30 +159,37 @@
         </div>
 
         <div class="mob-cards">
+            <button class="mob-card" type="button" data-mob="zombie">
+                <div class="mob-art"><img src="../media/sprites/zombie/card.png" alt=""></div>
+                <div class="mob-name">ЗОМБИ</div>
+                <div class="threat"><i></i><i></i><i></i><i></i></div>
+                <div class="mob-stats"></div>
+                <div class="mob-hint"></div>
+            </button>
             <button class="mob-card" type="button" data-mob="skeleton">
-                <div class="mob-art"><img src="../media/px/sprites/skeleton/idle.png" alt=""></div>
+                <div class="mob-art"><img src="../media/sprites/skeleton/card.png" alt=""></div>
                 <div class="mob-name">СКЕЛЕТ</div>
-                <div class="threat" data-threat="1"><i></i><i></i><i></i></div>
+                <div class="threat"><i></i><i></i><i></i><i></i></div>
                 <div class="mob-stats"></div>
                 <div class="mob-hint"></div>
             </button>
             <button class="mob-card" type="button" data-mob="ghost">
-                <div class="mob-art"><img src="../media/px/sprites/ghost/idle.png" alt=""></div>
+                <div class="mob-art"><img src="../media/sprites/ghost/card.png" alt=""></div>
                 <div class="mob-name">ПРИЗРАК</div>
-                <div class="threat" data-threat="2"><i></i><i></i><i></i></div>
+                <div class="threat"><i></i><i></i><i></i><i></i></div>
                 <div class="mob-stats"></div>
                 <div class="mob-hint"></div>
             </button>
             <button class="mob-card" type="button" data-mob="death_knight">
-                <div class="mob-art"><img src="../media/px/sprites/death-knight/idle.png" alt=""></div>
+                <div class="mob-art"><img src="../media/sprites/death-knight/card.png" alt=""></div>
                 <div class="mob-name">РЫЦАРЬ СМЕРТИ</div>
-                <div class="threat" data-threat="3"><i></i><i></i><i></i></div>
+                <div class="threat"><i></i><i></i><i></i><i></i></div>
                 <div class="mob-stats"></div>
                 <div class="mob-hint"></div>
             </button>
         </div>
         <div class="choose-foot">
-            <button class="px-btn" id="chooseMenuBtn" type="button"><img src="../media/px/icons/exit.png" class="ico" alt="">В МЕНЮ</button>
+            <button class="px-btn" id="chooseMenuBtn" type="button"><img src="../media/icons/exit.png" class="ico" alt="">В МЕНЮ</button>
             <span class="choose-keys"><span class="px-key">←</span><span class="px-key">→</span> ВЫБОР · <span class="px-key">ENTER</span> В БОЙ</span>
         </div>
     </div>
@@ -180,13 +198,13 @@
 <!-- ===== shop ===== -->
 <div id="shopModal" class="px-modal">
     <div class="px-panel shop">
-        <button class="px-btn px-close" id="closeShopBtn" type="button" aria-label="Закрыть"><img src="../media/px/icons/close.png" alt=""></button>
-        <div class="modal-head px-title"><img src="../media/px/icons/shop.png" alt="">ТОРГОВЕЦ</div>
+        <button class="px-btn px-close" id="closeShopBtn" type="button" aria-label="Закрыть"><img src="../media/icons/close.png" alt=""></button>
+        <div class="modal-head px-title"><img src="../media/icons/shop.png" alt="">ТОРГОВЕЦ</div>
         <div class="merchant-line" id="merchantLine">«Чего желаешь?»</div>
         <div class="px-divider"></div>
         <div class="shop-items" id="shopItems"></div>
         <div class="shop-foot">
-            <div class="res px-inset"><img src="../media/px/icons/gold.png" alt=""><b id="shopGold">0</b></div>
+            <div class="res px-inset"><img src="../media/icons/gold.png" alt=""><b id="shopGold">0</b></div>
             <button class="px-btn" id="closeShopBtn2" type="button">УЙТИ</button>
         </div>
     </div>
@@ -199,16 +217,18 @@
     <div class="px-panel glass result-card">
         <div class="result-stats" id="resultStats"></div>
         <div class="result-buttons">
-            <button class="px-btn red" id="restartBtn" type="button"><img src="../media/px/icons/attack.png" class="ico" alt="">ЕЩЁ РАЗ</button>
-            <button class="px-btn" id="resultMenuBtn" type="button"><img src="../media/px/icons/exit.png" class="ico" alt="">В МЕНЮ</button>
+            <button class="px-btn red" id="nextBtn" type="button" hidden><img src="../media/icons/target.png" class="ico" alt=""><span id="nextLabel">ДАЛЕЕ</span></button>
+            <button class="px-btn red" id="restartBtn" type="button"><img src="../media/icons/attack.png" class="ico" alt="">ЕЩЁ РАЗ</button>
+            <button class="px-btn" id="resultMenuBtn" type="button"><img src="../media/icons/exit.png" class="ico" alt="">В МЕНЮ</button>
         </div>
     </div>
 </div>
 
 <div class="crt"></div>
 
-<script src="../shared/core.js?v=3.5"></script>
-<script src="../shared/fx.js?v=3.5"></script>
-<script src="script.js?v=3.5"></script>
+<script src="../media/sprites/manifest.js?v=4.0"></script>
+<script src="../shared/core.js?v=4.0"></script>
+<script src="../shared/fx.js?v=4.0"></script>
+<script src="script.js?v=4.0"></script>
 </body>
 </html>

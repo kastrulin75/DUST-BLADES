@@ -18,6 +18,8 @@
     const continueBtn = $('continueBtn');
     const settingsModal = $('settingsModal');
     const leaderboardModal = $('leaderboardModal');
+    const patchModal = $('patchModal');
+    const PATCH_SEEN = 'dust_patch_seen';   // last patch whose notes were opened
     const confirmDeleteModal = $('confirmDeleteModal');
     const musicSlider = $('musicVolume');
     const sfxSlider = $('sfxVolume');
@@ -29,7 +31,6 @@
     const menuItems = Array.from(document.querySelectorAll('.menu-item'));
 
     let savedVolumes = null;
-    let pendingDiff = 'normal';
 
     function playHover() { if (audio) audio.playSfx('hover', 0.7); }
     function playClick() { if (audio) audio.playSfx('click'); }
@@ -56,13 +57,15 @@
         set('heroRank', C.getRank(ch.level || 1));
         set('statLevel', ch.level || 1);
         set('statStrength', ch.strength || 0);
-        set('statArmor', ch.armor || 0);
+        set('statBestHit', ch.bestHit || 0);
         set('statHp', ch.maxHp || 0);
         set('statGold', ch.gold || 0);
         set('statPotions', ch.inventory.potions || 0);
         set('statKills', ch.totalKills || 0);
         set('statWins', ch.wins || 0);
         set('statCombo', ch.bestCombo || 0);
+        paintHardcore();
+        set('statHardcore', ch.hardcoreBest ? 'ВОЛНА ' + ch.hardcoreBest : '—');
 
         const p = C.getExpProgress(ch.level || 1, ch.exp || 0);
         set('expCurrent', ch.exp || 0);
@@ -97,7 +100,7 @@
     }
 
     function anyModalOpen() {
-        return [settingsModal, leaderboardModal, confirmDeleteModal].some(m => m.classList.contains('open'));
+        return [settingsModal, leaderboardModal, confirmDeleteModal, patchModal].some(m => m.classList.contains('open'));
     }
 
     function openModal(m) {
@@ -112,7 +115,7 @@
     }
 
     /* ---------------- actions ---------------- */
-    function startGame() {
+    function startGame(mode) {
         playClick();
         if (audio) {
             audio.synth('heavy');
@@ -129,7 +132,40 @@
             scene.layer.slash(r.left + r.width * 0.6, r.top + r.height * 0.45, { radius: r.width * 0.45, width: 6, life: 0.3 });
         }
         FX.flash('#fff', 140, 0.4);
-        setTimeout(() => FX.go('../game/index.html'), 250);
+        setTimeout(() => FX.go('../game/index.html' + (mode ? '?mode=' + mode : '')), 250);
+    }
+
+    /** Hardcore: locked until every enemy is beaten on every difficulty */
+    function paintHardcore() {
+        const p = C.hardcoreProgress(currentCharacter);
+        const open = p.done >= p.total;
+        const btn = $('hardcoreBtn');
+        btn.classList.toggle('locked', !open);
+        $('hardcoreSub').textContent = open
+            ? (currentCharacter.hardcoreBest ? 'РЕКОРД: ВОЛНА ' + currentCharacter.hardcoreBest : 'ОТКРЫТ')
+            : 'ЗАКРЫТ · ' + p.done + '/' + p.total;
+        btn.title = open ? '' : 'Победи каждого врага на каждой сложности';
+    }
+
+    function startHardcore() {
+        if (C.isHardcoreUnlocked(currentCharacter)) {
+            startGame('hardcore');
+            return;
+        }
+        if (audio) audio.synth('block');
+        // the reason goes in the hint line under the menu (the item itself is too narrow for it)
+        const hint = document.querySelector('.menu-hint');
+        if (!startHardcore.keys) startHardcore.keys = hint.innerHTML;
+        const p = C.hardcoreProgress(currentCharacter);
+        hint.textContent = 'ПОБЕДИ КАЖДОГО ВРАГА НА КАЖДОЙ СЛОЖНОСТИ · ' + p.done + '/' + p.total;
+        hint.classList.add('warn');
+        $('hardcoreBtn').animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-3px)' }, { transform: 'translateX(0)' }],
+            { duration: 280, easing: 'ease-out' });
+        clearTimeout(startHardcore.t);
+        startHardcore.t = setTimeout(() => {
+            hint.innerHTML = startHardcore.keys;
+            hint.classList.remove('warn');
+        }, 2600);
     }
 
     function logout() {
@@ -171,8 +207,6 @@
         paintRange(sfxSlider);
         crtToggle.checked = vis.crt;
         shakeToggle.checked = vis.shake;
-        pendingDiff = C.getDifficulty();
-        document.querySelectorAll('#diffSeg button').forEach(b => b.classList.toggle('active', b.dataset.diff === pendingDiff));
     }
 
     function openSettings() {
@@ -194,10 +228,17 @@
     function saveSettings() {
         C.saveVolumes(parseInt(musicSlider.value, 10), parseInt(sfxSlider.value, 10));
         C.saveVisualSettings({ crt: crtToggle.checked, shake: shakeToggle.checked });
-        C.setDifficulty(pendingDiff);
         savedVolumes = null;
         if (audio) audio.playSfx('upgrade', 0.6);
         closeModal(settingsModal, true);
+    }
+
+    /* ---------------- patch notes ---------------- */
+    function showPatchNotes() {
+        openModal(patchModal);
+        patchModal.querySelector('.pn-list').scrollTop = 0;
+        $('patchNew').hidden = true;
+        try { localStorage.setItem(PATCH_SEEN, C.VERSION); } catch (_) {}
     }
 
     /* ---------------- leaderboard ---------------- */
@@ -207,7 +248,8 @@
                 username: u.username,
                 kills: (u.character && u.character.totalKills) || 0,
                 level: (u.character && u.character.level) || 1,
-                wins: (u.character && u.character.wins) || 0
+                wins: (u.character && u.character.wins) || 0,
+                hardcore: (u.character && u.character.hardcoreBest) || 0
             }))
             .sort((a, b) => b.kills - a.kills || b.wins - a.wins || b.level - a.level)
             .slice(0, 10);
@@ -225,6 +267,7 @@
                 '<span>' + l.level + '</span>' +
                 '<span>' + l.kills + '</span>' +
                 '<span>' + l.wins + '</span>' +
+                '<span>' + (l.hardcore || '—') + '</span>' +
                 '</div>'
             ).join('');
         }
@@ -248,7 +291,8 @@
         $('titleScreen').addEventListener('click', openMenu);
 
         const actions = {
-            playBtn: startGame,
+            playBtn: () => startGame(),
+            hardcoreBtn: startHardcore,
             leaderboardBtn: showLeaderboard,
             settingsBtn: openSettings,
             logoutBtn: logout
@@ -267,8 +311,11 @@
         $('closeSettingsBtn').addEventListener('click', cancelSettings);
         $('saveSettingsBtn').addEventListener('click', saveSettings);
         $('closeLeaderboardBtn').addEventListener('click', () => closeModal(leaderboardModal));
+        $('patchBtn').addEventListener('click', showPatchNotes);
+        $('patchBtn').addEventListener('mouseenter', playHover);
+        $('closePatchBtn').addEventListener('click', () => closeModal(patchModal));
 
-        [settingsModal, leaderboardModal, confirmDeleteModal].forEach(m => {
+        [settingsModal, leaderboardModal, confirmDeleteModal, patchModal].forEach(m => {
             m.addEventListener('click', e => {
                 if (e.target !== m) return;
                 if (m === settingsModal) cancelSettings();
@@ -312,13 +359,6 @@
             document.documentElement.classList.toggle('no-shake', !shakeToggle.checked);
             if (shakeToggle.checked) FX.shake(settingsModal.firstElementChild, 6);
         });
-        document.querySelectorAll('#diffSeg button').forEach(b => {
-            b.addEventListener('click', () => {
-                playClick();
-                pendingDiff = b.dataset.diff;
-                document.querySelectorAll('#diffSeg button').forEach(x => x.classList.toggle('active', x === b));
-            });
-        });
 
         document.addEventListener('keydown', e => {
             if (e.repeat) return;
@@ -332,6 +372,7 @@
             if (e.key === 'Escape') {
                 if (settingsModal.classList.contains('open')) cancelSettings();
                 else if (leaderboardModal.classList.contains('open')) closeModal(leaderboardModal);
+                else if (patchModal.classList.contains('open')) closeModal(patchModal);
                 else if (confirmDeleteModal.classList.contains('open')) closeModal(confirmDeleteModal);
                 return;
             }
@@ -353,9 +394,14 @@
     function init() {
         if (!loadUserData()) return;
         $('versionInfo').textContent = 'ПАТЧ ' + C.VERSION;
+        $('patchVersion').textContent = C.VERSION;
+        // "NEW" until this patch's notes have been opened once
+        let seen = '';
+        try { seen = localStorage.getItem(PATCH_SEEN) || ''; } catch (_) {}
+        $('patchNew').hidden = seen === C.VERSION;
         scene = window.DustDungeon.build(document.body);
         FX.enter();
-        FX.prepareSprite('../media/px/sprites/hero/idle.png');
+        FX.prepareSprite('../media/sprites/hero/idle.png');
         loadAudio();
         bindEvents();
         audio.startMusic('menu');

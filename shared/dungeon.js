@@ -1,16 +1,21 @@
 /**
- * DUST & BLADES — animated dungeon backdrop (sign-in + main menu)
+ * DUST & BLADES — animated dungeon backdrop (main menu)
+ *
+ * Looping video of the dungeon wall with torch glow, embers and fog on top.
  */
 (function (global) {
     'use strict';
     const FX = global.DustFX;
+    // same ?v= as this script, so a new picture is never served from the browser cache
+    const V = (document.currentScript && document.currentScript.src.split('?')[1]) || '';
 
-    // Torch flame positions inside media/bg.png (fractions of the image)
+    // Torch flame positions inside the dungeon picture (fractions of the image)
     const TORCHES = [
-        { x: 0.314, y: 0.335 },
-        { x: 0.685, y: 0.335 },
-        { x: 0.147, y: 0.775 },
-        { x: 0.854, y: 0.775 }
+        { x: 0.135, y: 0.41 },
+        { x: 0.872, y: 0.41 },
+        { x: 0.352, y: 0.53 },
+        { x: 0.655, y: 0.527 },
+        { x: 0.379, y: 0.678 }
     ];
 
     function build(root) {
@@ -18,7 +23,7 @@
         stage.className = 'stage';
         stage.innerHTML =
             '<div class="stage-box">' +
-                '<div class="stage-img" style="background-image:url(\'../media/px/bg.jpg\')"></div>' +
+                '<div class="stage-img" style="background-image:url(\'../media/images/bg_menu.jpg' + (V ? '?' + V : '') + '\')"></div>' +
                 TORCHES.map(t => '<div class="torch-light" style="left:' + (t.x * 100) + '%;top:' + (t.y * 100) + '%"></div>').join('') +
                 '<div class="fog back"></div><div class="fog"></div>' +
             '</div>' +
@@ -31,18 +36,21 @@
 
         const box = stage.querySelector('.stage-box');
         const img = stage.querySelector('.stage-img');
-        let rect = box.getBoundingClientRect();
-        global.addEventListener('resize', () => { rect = box.getBoundingClientRect(); });
+        const lights = Array.from(stage.querySelectorAll('.torch-light'));
+        FX.backdropVideo(img, '../media/video/bg_menu.mp4' + (V ? '?' + V : ''));
 
         const layer = FX.createLayer({ z: 1 });
-        const pts = TORCHES.map(t => ({
-            x: () => (rect.left + t.x * rect.width) / global.innerWidth,
-            y: () => (rect.top + (t.y - 0.02) * rect.height) / global.innerHeight
-        }));
+        // embers rise from the torches
+        const pts = lights.map(el => {
+            let r = null;
+            return {
+                x: () => { r = el.getBoundingClientRect(); return (r.left + r.width / 2) / global.innerWidth; },
+                y: () => ((r || el.getBoundingClientRect()).top + (r || el.getBoundingClientRect()).height * 0.42) / global.innerHeight
+            };
+        });
         FX.ambient.embers(layer, pts, 16);
         FX.ambient.ash(layer, 5);
 
-        // Torch lights and fog move with the wall so the glow stays on the torches
         FX.parallax([{ el: box, depth: 10, base: 'translate(-50%,-50%)' }]);
 
         return { stage, box, img, layer };

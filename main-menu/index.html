@@ -18,9 +18,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Tiny5&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../shared/theme.css?v=3.5">
-    <link rel="stylesheet" href="style.css?v=3.5">
-    <link rel="shortcut icon" href="../media/icon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../shared/theme.css?v=4.0">
+    <link rel="stylesheet" href="style.css?v=4.0">
+    <link rel="shortcut icon" href="../media/images/icon.ico" type="image/x-icon">
 </head>
 <body class="title-phase">
 <div id="fxCurtain"></div>
@@ -29,7 +29,7 @@
 <div class="title-screen" id="titleScreen">
     <div class="title-logo">
         <div class="title-glow"></div>
-        <img src="../media/px/logo.png" alt="DUST & BLADES" onerror="this.style.display='none'">
+        <img src="../media/images/logo.png" alt="DUST & BLADES" onerror="this.style.display='none'">
     </div>
     <button class="press-start blink" id="continueBtn" type="button">НАЖМИ ЛЮБУЮ КЛАВИШУ</button>
     <div class="title-welcome" id="welcomeMessage"></div>
@@ -45,7 +45,7 @@
                 <div class="hero-name" id="heroName">ГЕРОЙ</div>
                 <div class="hero-rank" id="heroRank">БРОДЯГА</div>
                 <div class="hero-lvl">
-                    <img src="../media/px/icons/level.png" alt="">
+                    <img src="../media/icons/level.png" alt="">
                     УР. <span id="statLevel">1</span>
                 </div>
             </div>
@@ -54,19 +54,20 @@
         <div class="px-divider"></div>
 
         <div class="stat-grid">
-            <div class="stat"><img src="../media/px/icons/strength.png" alt=""><span>СИЛА</span><b id="statStrength">0</b></div>
-            <div class="stat"><img src="../media/px/icons/armor.png" alt=""><span>БРОНЯ</span><b id="statArmor">0</b></div>
-            <div class="stat"><img src="../media/px/icons/heart.png" alt=""><span>ЗДОРОВЬЕ</span><b id="statHp">0</b></div>
-            <div class="stat"><img src="../media/px/icons/potion.png" alt=""><span>ЗЕЛЬЯ</span><b id="statPotions">0</b></div>
-            <div class="stat"><img src="../media/px/icons/gold.png" alt=""><span>ЗОЛОТО</span><b id="statGold">0</b></div>
-            <div class="stat"><img src="../media/px/icons/skull.png" alt=""><span>УБИЙСТВ</span><b id="statKills">0</b></div>
-            <div class="stat"><img src="../media/px/icons/trophy.png" alt=""><span>ПОБЕД</span><b id="statWins">0</b></div>
-            <div class="stat"><img src="../media/px/icons/target.png" alt=""><span>КОМБО</span><b id="statCombo">0</b></div>
+            <div class="stat"><img src="../media/icons/strength.png" alt=""><span>СИЛА</span><b id="statStrength">0</b></div>
+            <div class="stat"><img src="../media/icons/attack.png" alt=""><span>ЛУЧШИЙ УДАР</span><b id="statBestHit">0</b></div>
+            <div class="stat"><img src="../media/icons/heart.png" alt=""><span>ЗДОРОВЬЕ</span><b id="statHp">0</b></div>
+            <div class="stat"><img src="../media/icons/potion.png" alt=""><span>ЗЕЛЬЯ</span><b id="statPotions">0</b></div>
+            <div class="stat"><img src="../media/icons/gold.png" alt=""><span>ЗОЛОТО</span><b id="statGold">0</b></div>
+            <div class="stat"><img src="../media/icons/skull.png" alt=""><span>УБИЙСТВ</span><b id="statKills">0</b></div>
+            <div class="stat"><img src="../media/icons/trophy.png" alt=""><span>ПОБЕД</span><b id="statWins">0</b></div>
+            <div class="stat"><img src="../media/icons/target.png" alt=""><span>КОМБО</span><b id="statCombo">0</b></div>
+            <div class="stat wide"><img src="../media/icons/skull.png" alt=""><span>ХАРДКОР · РЕКОРД</span><b id="statHardcore">—</b></div>
         </div>
 
         <div class="exp-block">
             <div class="exp-label">
-                <span><img src="../media/px/icons/exp.png" alt=""> ОПЫТ</span>
+                <span><img src="../media/icons/exp.png" alt=""> ОПЫТ</span>
                 <span><span id="expCurrent">0</span> / <span id="expNext">100</span></span>
             </div>
             <div class="px-bar exp"><div class="fill" id="expBarFill" style="width:0"></div></div>
@@ -75,22 +76,27 @@
 
     <!-- main menu -->
     <section class="center-col">
-        <img class="hub-logo" src="../media/px/logo.png" alt="DUST & BLADES" onerror="this.style.display='none'">
+        <img class="hub-logo" src="../media/images/logo.png" alt="DUST & BLADES" onerror="this.style.display='none'">
         <nav class="menu-list" id="buttonsPanel">
             <button class="menu-item" id="playBtn" type="button">
-                <img src="../media/px/icons/attack.png" alt="">
+                <img src="../media/icons/attack.png" alt="">
                 <span>В БОЙ</span>
             </button>
+            <button class="menu-item" id="hardcoreBtn" type="button">
+                <img src="../media/icons/skull.png" alt="">
+                <span>ХАРДКОР</span>
+                <small class="menu-sub" id="hardcoreSub"></small>
+            </button>
             <button class="menu-item" id="leaderboardBtn" type="button">
-                <img src="../media/px/icons/trophy.png" alt="">
+                <img src="../media/icons/trophy.png" alt="">
                 <span>РЕКОРДЫ</span>
             </button>
             <button class="menu-item" id="settingsBtn" type="button">
-                <img src="../media/px/icons/level.png" alt="">
+                <img src="../media/icons/settings.png" alt="">
                 <span>НАСТРОЙКИ</span>
             </button>
             <button class="menu-item" id="logoutBtn" type="button">
-                <img src="../media/px/icons/exit.png" alt="">
+                <img src="../media/icons/exit.png" alt="">
                 <span>СМЕНИТЬ ГЕРОЯ</span>
             </button>
         </nav>
@@ -99,24 +105,26 @@
 
     <!-- hero showcase -->
     <section class="showcase" aria-hidden="true">
-        <div class="pedestal-light"></div>
         <div class="hero-shadow"></div>
-        <img class="hero-figure" src="../media/px/sprites/hero/idle.png" alt="">
-        <div class="pedestal"></div>
+        <img class="hero-figure" src="../media/sprites/hero/idle.png" alt="">
     </section>
 
     <button class="delete-user-btn" id="deleteUserBtn" type="button">
-        <img src="../media/px/icons/delete.png" alt="">
+        <img src="../media/icons/delete.png" alt="">
         УДАЛИТЬ ГЕРОЯ
     </button>
-    <div class="version-info" id="versionInfo">ПАТЧ 3.0</div>
+    <button class="version-info" id="patchBtn" type="button" title="Что нового в этом обновлении">
+        <span class="pn-new" id="patchNew" hidden>NEW</span>
+        <span class="pn-label">ЧТО НОВОГО</span>
+        <span id="versionInfo">ПАТЧ 4.0</span>
+    </button>
 </div>
 
 <!-- ===== confirm delete ===== -->
 <div id="confirmDeleteModal" class="px-modal">
     <div class="px-panel confirm-window">
-        <button class="px-btn px-close" id="closeConfirmBtn" type="button" aria-label="Закрыть"><img src="../media/px/icons/close.png" alt=""></button>
-        <div class="modal-head px-title"><img src="../media/px/icons/skull.png" alt="">УДАЛИТЬ ГЕРОЯ?</div>
+        <button class="px-btn px-close" id="closeConfirmBtn" type="button" aria-label="Закрыть"><img src="../media/icons/close.png" alt=""></button>
+        <div class="modal-head px-title"><img src="../media/icons/skull.png" alt="">УДАЛИТЬ ГЕРОЯ?</div>
         <div class="px-divider"></div>
         <p class="confirm-text">Герой <b id="confirmName"></b> и весь прогресс будут удалены.</p>
         <div class="confirm-buttons">
@@ -129,8 +137,8 @@
 <!-- ===== settings ===== -->
 <div id="settingsModal" class="px-modal">
     <div class="px-panel">
-        <button class="px-btn px-close" id="closeSettingsBtn" type="button" aria-label="Закрыть"><img src="../media/px/icons/close.png" alt=""></button>
-        <div class="modal-head px-title"><img src="../media/px/icons/level.png" alt="">НАСТРОЙКИ</div>
+        <button class="px-btn px-close" id="closeSettingsBtn" type="button" aria-label="Закрыть"><img src="../media/icons/close.png" alt=""></button>
+        <div class="modal-head px-title"><img src="../media/icons/settings.png" alt="">НАСТРОЙКИ</div>
         <div class="px-divider"></div>
 
         <div class="set-row">
@@ -142,14 +150,6 @@
             <label for="sfxVolume">ЗВУКИ</label>
             <input class="px-range" type="range" id="sfxVolume" min="0" max="100" value="50">
             <span class="set-val" id="sfxVolumeValue">50%</span>
-        </div>
-        <div class="set-row">
-            <label>СЛОЖНОСТЬ</label>
-            <div class="seg" id="diffSeg">
-                <button type="button" data-diff="easy">ЛЕГКО</button>
-                <button type="button" data-diff="normal">НОРМА</button>
-                <button type="button" data-diff="hard">СЛОЖНО</button>
-            </div>
         </div>
         <div class="set-row">
             <label for="crtToggle">ЭФФЕКТ ЭЛТ</label>
@@ -164,14 +164,73 @@
     </div>
 </div>
 
+<!-- ===== patch notes ===== -->
+<div id="patchModal" class="px-modal">
+    <div class="px-panel patch-window">
+        <button class="px-btn px-close" id="closePatchBtn" type="button" aria-label="Закрыть"><img src="../media/icons/close.png" alt=""></button>
+        <div class="modal-head px-title"><img src="../media/icons/level.png" alt="">ПАТЧ <span id="patchVersion">4.0</span></div>
+        <div class="pn-sub">Что добавлено в этом обновлении</div>
+        <div class="px-divider"></div>
+        <div class="pn-list">
+            <section class="pn-sec">
+                <h3><img src="../media/icons/attack.png" alt="">БОЙ</h3>
+                <ul>
+                    <li>Атака на тайминг: останови бегущую черту в центре полосы. ИДЕАЛЬНО — крит, мимо — промах.</li>
+                    <li>УЛЬТИМЕЙТ (раньше Вихрь): пять полос подряд, урон зависит от числа попаданий. Пять точных — особый звук.</li>
+                    <li>Броня убрана: героя спасает только здоровье.</li>
+                    <li>Персонажам добавлены спрайты: атака, урон, блок, победа, поражение.</li>
+                </ul>
+            </section>
+            <section class="pn-sec">
+                <h3><img src="../media/icons/skull.png" alt="">ВРАГИ</h3>
+                <ul>
+                    <li>Новый враг — ЗОМБИ: самое первое и самое лёгкое испытание.</li>
+                    <li>Скелеты, призраки и рыцари смерти перебалансированы.</li>
+                    <li>Враги заговорили: бормочут, кричат при появлении, атаке, ранении и смерти. Рыцарь смеётся над промахом.</li>
+                </ul>
+            </section>
+            <section class="pn-sec">
+                <h3><img src="../media/icons/skull.png" alt="">ХАРДКОР</h3>
+                <ul>
+                    <li>Новый режим в меню. Открывается, когда каждый враг побеждён на каждой сложности.</li>
+                    <li>Враги намного сильнее, чем на СЛОЖНО. Между волнами лечит только 30% здоровья.</li>
+                    <li>Торговец приходит только на каждую 5-ю волну.</li>
+                    <li>Лучшая волна попадает в карточку героя и в РЕКОРДЫ.</li>
+                </ul>
+            </section>
+            <section class="pn-sec">
+                <h3><img src="../media/icons/shop.png" alt="">МАГАЗИН</h3>
+                <ul>
+                    <li>Новые цены: точильный камень 60, зелье 30, эликсир жизни 100.</li>
+                    <li>Каждая покупка камня или эликсира поднимает его цену.</li>
+                    <li>Зелье тем дороже, чем больше их у тебя в сумке.</li>
+                </ul>
+            </section>
+            <section class="pn-sec">
+                <h3><img src="../media/icons/settings.png" alt="">МЕНЮ И ВИД</h3>
+                <ul>
+                    <li>Живые видео-фоны в меню и в бою, новый фон подземелья.</li>
+                </ul>
+            </section>
+            <section class="pn-sec">
+                <h3><img src="../media/icons/wait.png" alt="">ОПТИМИЗАЦИЯ</h3>
+                <ul>
+                    <li>Звуки переписаны: браузер больше не подвисает при запуске игры и во время стрима.</li>
+                    <li>Частицы легче на экранах 2K и 4K.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</div>
+
 <!-- ===== leaderboard ===== -->
 <div id="leaderboardModal" class="px-modal">
     <div class="px-panel leaderboard-window">
-        <button class="px-btn px-close" id="closeLeaderboardBtn" type="button" aria-label="Закрыть"><img src="../media/px/icons/close.png" alt=""></button>
-        <div class="modal-head px-title"><img src="../media/px/icons/trophy.png" alt="">РЕКОРДЫ</div>
+        <button class="px-btn px-close" id="closeLeaderboardBtn" type="button" aria-label="Закрыть"><img src="../media/icons/close.png" alt=""></button>
+        <div class="modal-head px-title"><img src="../media/icons/trophy.png" alt="">РЕКОРДЫ</div>
         <div class="px-divider"></div>
         <div class="lb-head">
-            <span>#</span><span>ГЕРОЙ</span><span>УР.</span><span>УБИЙСТВ</span><span>ПОБЕД</span>
+            <span>#</span><span>ГЕРОЙ</span><span>УР.</span><span>УБИЙСТВ</span><span>ПОБЕД</span><span>ХАРДКОР</span>
         </div>
         <div id="leaderboardList" class="lb-list"></div>
     </div>
@@ -179,9 +238,9 @@
 
 <div class="crt"></div>
 
-<script src="../shared/core.js?v=3.5"></script>
-<script src="../shared/fx.js?v=3.5"></script>
-<script src="../shared/dungeon.js?v=3.5"></script>
-<script src="script.js?v=3.5"></script>
+<script src="../shared/core.js?v=4.0"></script>
+<script src="../shared/fx.js?v=4.0"></script>
+<script src="../shared/dungeon.js?v=4.0"></script>
+<script src="script.js?v=4.0"></script>
 </body>
 </html>

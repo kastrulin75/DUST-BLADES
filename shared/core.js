@@ -15,7 +15,7 @@
         SHAKE: 'dust_shake'
     };
 
-    const VERSION = '3.0';
+    const VERSION = '4.0';
     const MAX_LEVEL = 25;
     const EXP_TABLE = {
         1: 0, 2: 100, 3: 200, 4: 500, 5: 750,
@@ -30,6 +30,22 @@
         normal: { label: 'НОРМА',   enemyHp: 1,    enemyDmg: 1,    reward: 1 },
         hard:   { label: 'СЛОЖНО',  enemyHp: 1.35, enemyDmg: 1.25, reward: 1.4 }
     };
+    // separate mode, far above "hard"; opens once every enemy is beaten on every difficulty
+    const HARDCORE = { label: 'ХАРДКОР', enemyHp: 2, enemyDmg: 1.6, reward: 2 };
+    const MOB_KEYS = ['zombie', 'skeleton', 'ghost', 'death_knight'];
+
+    /** How many enemy + difficulty pairs the hero has beaten, out of how many */
+    function hardcoreProgress(ch) {
+        const cleared = (ch && ch.cleared) || {};
+        const keys = [];
+        MOB_KEYS.forEach(m => Object.keys(DIFFICULTY).forEach(d => keys.push(m + ':' + d)));
+        return { done: keys.filter(k => cleared[k]).length, total: keys.length };
+    }
+
+    function isHardcoreUnlocked(ch) {
+        const p = hardcoreProgress(ch);
+        return p.done >= p.total;
+    }
 
     /** Rank shown next to the hero's name */
     const RANKS = [
@@ -65,11 +81,13 @@
             strength: 16,
             maxHp: 150,
             currentHp: 150,
-            armor: 4,
             gold: 120,
             totalKills: 0,
             wins: 0,
             bestCombo: 0,
+            hardcoreBest: 0,
+            cleared: {},          // 'zombie:hard': true — enemy beaten on that difficulty
+            bought: {},           // shop purchases per item: every one raises that item's price
             inventory: { potions: 6 }
         };
     }
@@ -80,7 +98,20 @@
         if (!c.inventory || typeof c.inventory.potions !== 'number') c.inventory = { potions: 3 };
         if (typeof c.wins !== 'number') c.wins = 0;
         if (typeof c.bestCombo !== 'number') c.bestCombo = 0;
+        if (typeof c.hardcoreBest !== 'number') c.hardcoreBest = 0;
+        if (!c.cleared || typeof c.cleared !== 'object') c.cleared = {};
+        if (!ch || !ch.bought || typeof ch.bought !== 'object') {
+            // older saves: work out the upgrades already bought from the stats
+            // (start 16 str / 150 hp, +3 str / +15 hp per level, shop +2 str / +15 hp)
+            const lv = (c.level || 1) - 1;
+            c.bought = {
+                strength: Math.max(0, Math.round((c.strength - 16 - lv * 3) / 2)),
+                vitality: Math.max(0, Math.round((c.maxHp - 150 - lv * 15) / 15)),
+                potion: 0
+            };
+        }
         c.currentHp = Math.min(c.currentHp, c.maxHp);
+        delete c.armor;   // armor was removed from the game: only HP protects the hero
         return c;
     }
 
@@ -191,7 +222,6 @@
         let sfxVol = 50;
         const tracks = Object.create(null);
         let current = null;
-        const pools = Object.create(null);
         let unlocked = false;
         let ctx = null;
         const fades = new Map();
@@ -230,29 +260,11 @@
             return a;
         }
 
-        function loadSfx(key, src, poolSize) {
-            const size = poolSize || 3;
-            const list = [];
-            for (let i = 0; i < size; i++) {
-                const a = new Audio(src);
-                a.preload = 'auto';
-                list.push(a);
-            }
-            pools[key] = { list, i: 0 };
-        }
-
-        function playSfx(key, mult) {
-            const pool = pools[key];
-            if (!pool) return;
-            const a = pool.list[pool.i];
-            pool.i = (pool.i + 1) % pool.list.length;
-            try {
-                a.currentTime = 0;
-                a.volume = Math.min(1, (sfxVol / 100) * (mult == null ? 1 : mult));
-                const p = a.play();
-                if (p && p.catch) p.catch(() => {});
-            } catch (_) {}
-        }
+        // Sound effects are decoded once into WebAudio buffers. (One <audio> element per copy
+        // used to mean 50-90 media players per page, which could stall the whole browser.)
+        const sfx = Object.create(null);      // key -> { src, buf }
+        const decodeQueue = [];
+        let decoding = 0;
 
         function audioCtx() {
             if (!ctx) {
@@ -260,8 +272,65 @@
                 if (!AC) return null;
                 ctx = new AC();
             }
-            if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+            if (ctx.state === 'suspended' && unlocked) ctx.resume().catch(() => {});
             return ctx;
+        }
+
+        /** Fetch + decode a few files at a time so a page load is not one big burst */
+        function pumpDecode() {
+            const c = audioCtx();
+            while (c && decoding < 3 && decodeQueue.length) {
+                const item = decodeQueue.shift();
+                decoding++;
+                fetch(item.src)
+                    .then(r => (r.ok ? r.arrayBuffer() : Promise.reject(r.status)))
+                    .then(data => new Promise((ok, bad) => c.decodeAudioData(data, ok, bad)))
+                    .then(buf => { item.buf = buf; })
+                    .catch(() => {
+                        // fetch() is blocked when the game is opened straight from disk (file://):
+                        // fall back to a single <audio> element for this sound
+                        item.el = new Audio(item.src);
+                        item.el.preload = 'auto';
+                    })
+                    .then(() => { decoding--; pumpDecode(); });
+            }
+        }
+
+        // (a third "pool size" argument from older callers is ignored: one buffer plays any number of times at once)
+        function loadSfx(key, src) {
+            if (sfx[key] && sfx[key].src === src) return;
+            const item = { src, buf: null };
+            sfx[key] = item;
+            decodeQueue.push(item);
+            pumpDecode();
+        }
+
+        /** Play a loaded effect. Returns { duration } in seconds, or undefined while it is still loading. */
+        function playSfx(key, mult) {
+            const item = sfx[key];
+            if (!item || sfxVol <= 0) return;
+            const vol = Math.min(1, (sfxVol / 100) * (mult == null ? 1 : mult));
+            if (item.el) {
+                // busy? play a throwaway copy so overlapping hits still sound
+                const a = item.el.paused ? item.el : item.el.cloneNode();
+                try {
+                    a.currentTime = 0;
+                    a.volume = vol;
+                    const p = a.play();
+                    if (p && p.catch) p.catch(() => {});
+                } catch (_) {}
+                return { duration: item.el.duration };
+            }
+            const c = audioCtx();
+            if (!item.buf || !c) return;
+            if (c.state === 'suspended') c.resume().catch(() => {});
+            const src = c.createBufferSource();
+            src.buffer = item.buf;
+            const g = c.createGain();
+            g.gain.value = vol;
+            src.connect(g).connect(c.destination);
+            src.start();
+            return { duration: item.buf.duration };
         }
 
         let noiseBuf = null;
@@ -335,6 +404,11 @@
                     break;
                 case 'select':
                     tone('square', 660, 990, 0, 0.06, 0.12);
+                    break;
+                case 'perfect':
+                    tone('square', 988, 1976, 0, 0.08, 0.16);
+                    tone('square', 1319, 1319, 0.06, 0.16, 0.12);
+                    tone('triangle', 1976, 1976, 0.1, 0.22, 0.1);
                     break;
                 case 'levelup':
                     [523, 659, 784, 1046].forEach((f, i) => tone('square', f, f, i * 0.09, 0.14, 0.14));
@@ -418,14 +492,13 @@
         return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
     }
 
-    const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-    function roman(n) { return ROMAN[n] || String(n); }
-
-    /** Exact-case media paths (they matter on case-sensitive web hosts) */
+    /** Sound files in media/audio (all lower-case: case matters on web hosts) */
     const MEDIA = {
-        click: 'click.MP3', hover: 'hover.MP3', coin: 'coin.MP3', potion: 'potion.MP3',
-        victory: 'victory.MP3', desert: 'desert.MP3', attack: 'attack.mp3', lose: 'lose.mp3',
-        menu: 'menu.mp3', shop: 'shop.mp3', upgrade: 'upgrade.mp3'
+        click: 'audio/click.mp3', hover: 'audio/hover.mp3', coin: 'audio/coin.mp3', potion: 'audio/potion.mp3',
+        victory: 'audio/victory.mp3', desert: 'audio/desert.mp3', attack: 'audio/attack.mp3', lose: 'audio/lose.mp3',
+        menu: 'audio/menu.mp3', shop: 'audio/shop.mp3', upgrade: 'audio/upgrade.mp3', slash: 'audio/slash.mp3',
+        hardcore: 'audio/hardcore.mp3', shopOpen: 'audio/shop-open.mp3',
+        ultHit: 'audio/ult-hit.mp3', ultSlash: 'audio/ult-slash.mp3', ultPerfect: 'audio/ult-perfect.mp3'
     };
 
     if (typeof document !== 'undefined') applyVisualSettings();
@@ -437,6 +510,7 @@
         setSession, clearSession, saveCharacter, getVolumes, saveVolumes,
         getVisualSettings, saveVisualSettings, applyVisualSettings,
         getDifficulty, setDifficulty, hashPassword,
-        createAudioManager, randInt, clamp, safeParse, escapeHtml, roman
+        createAudioManager, randInt, clamp, safeParse, escapeHtml,
+        HARDCORE, MOB_KEYS, hardcoreProgress, isHardcoreUnlocked
     };
 })(typeof window !== 'undefined' ? window : globalThis);
