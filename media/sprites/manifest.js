@@ -61,4 +61,4 @@ window.DUST_SPRITES = {
   "ground": 0.9727
  }
 };
-window.DUST_SPRITES_V = "20261025190918";
+window.DUST_SPRITES_V = "20261026224918";

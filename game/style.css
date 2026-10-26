@@ -12,7 +12,7 @@
 }
 
 /* ================= BACKDROP ================= */
-/* the dusk grade is baked into media/video/desert_dusk.mp4 and its still desert_dusk.jpg (no per-frame CSS filter) */
+/* the dusk grade is baked into media/images/desert_dusk.jpg (no per-frame CSS filter) */
 .sun-glow {
     position: absolute;
     left: 26%;

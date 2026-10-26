@@ -555,28 +555,5 @@
         }
     });
 
-    /** Looping silent video over a picture backdrop. The picture stays underneath until the video plays. */
-    function backdropVideo(host, src) {
-        if (!host || reduced) return null;
-        const v = document.createElement('video');
-        v.className = 'stage-video';
-        v.muted = true;
-        v.loop = true;
-        v.playsInline = true;
-        v.autoplay = true;
-        v.preload = 'auto';
-        v.setAttribute('muted', '');
-        v.setAttribute('playsinline', '');
-        v.setAttribute('aria-hidden', 'true');
-        v.addEventListener('playing', () => v.classList.add('ready'), { once: true });
-        v.src = src;
-        host.appendChild(v);
-        const play = () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
-        play();
-        // no decoding while the tab is in the background
-        document.addEventListener('visibilitychange', () => { if (document.hidden) v.pause(); else play(); });
-        return v;
-    }
-
-    global.DustFX = { PX, createLayer, prepareSprite, ambient, shake, flash, parallax, enter, go, backdropVideo, rand, pick, reduced };
+    global.DustFX = { PX, createLayer, prepareSprite, ambient, shake, flash, parallax, enter, go, rand, pick, reduced };
 })(window);

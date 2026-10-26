@@ -9,9 +9,6 @@ __pycache__/
 # local backup of the previous version of the game
 old-version/
 
-# full-size video originals (too big for GitHub); the game uses media/video/
-source/images/*.mp4
-
 # OS junk
 Thumbs.db
 desktop.ini

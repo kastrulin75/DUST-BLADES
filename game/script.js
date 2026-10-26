@@ -51,38 +51,48 @@
 
     // Enemies in order of threat. Art lives in media/sprites/<dir>/<pose>.png (see manifest.js).
     // h = body height relative to the hero (unit-h)
+    // hp / damage are the NORMAL base (×difficulty, ×wave); `easy` keeps the softer pre-4.0 base for EASY.
+    // gold is set per difficulty, exp = exp × the difficulty's reward.
     const MOBS = {
         zombie: {
-            name: 'ЗОМБИ', plural: 'ЗОМБИ', hp: 70,
-            damageMin: 14, damageMax: 20,
-            exp: 20, gold: 15,
+            name: 'ЗОМБИ', plural: 'ЗОМБИ', hp: 97,
+            damageMin: 17, damageMax: 24,
+            exp: 20,
+            gold: { easy: 13, normal: 35, hard: 53, hardcore: 80 },
+            easy: { hp: 70, damageMin: 14, damageMax: 20 },
             dir: 'zombie', h: 0.95, threat: 1,
             hint: 'Медленный и неуклюжий. Хорошая разминка.',
             hitColors: ['#8fa86a', '#5a7040', '#9a2a1a', '#c8d8a0'],
             deathPalette: ['#6a8048', '#4a5a30', '#3a2a1a', '#8a3020', '#2a2018']
         },
         skeleton: {
-            name: 'СКЕЛЕТ', plural: 'СКЕЛЕТЫ', hp: 95,
-            damageMin: 18, damageMax: 25,
-            exp: 32, gold: 25,
+            name: 'СКЕЛЕТ', plural: 'СКЕЛЕТЫ', hp: 132,
+            damageMin: 22, damageMax: 30,
+            exp: 32,
+            gold: { easy: 21, normal: 54, hard: 77, hardcore: 120 },
+            easy: { hp: 95, damageMin: 18, damageMax: 25 },
             dir: 'skeleton', h: 0.95, threat: 2,
             hint: 'Быстрые кинжалы. Может собраться вновь.',
             hitColors: ['#efe2c4', '#c9b48a', '#8b7d6f', '#ffffff'],
             deathPalette: ['#efe2c4', '#c9b48a', '#8b7d6f', '#5a4a3a', '#2a221c']
         },
         ghost: {
-            name: 'ПРИЗРАК', plural: 'ПРИЗРАКИ', hp: 190,
-            damageMin: 36, damageMax: 46,
-            exp: 65, gold: 55,
+            name: 'ПРИЗРАК', plural: 'ПРИЗРАКИ', hp: 263,
+            damageMin: 44, damageMax: 55,
+            exp: 65,
+            gold: { easy: 47, normal: 72, hard: 98, hardcore: 180 },
+            easy: { hp: 190, damageMin: 36, damageMax: 46 },
             dir: 'ghost', h: 1.0, threat: 3,
             hint: 'Бьёт больно. Уклоняется от каждого пятого удара.',
             hitColors: ['#79e6d6', '#bff7ee', '#3a8a90', '#e8ffff'],
             deathPalette: ['#79e6d6', '#4aa8a8', '#2a5a66', '#bff7ee', '#1a2a3a']
         },
         death_knight: {
-            name: 'РЫЦАРЬ СМЕРТИ', plural: 'РЫЦАРИ СМЕРТИ', hp: 290,
-            damageMin: 70, damageMax: 84,
-            exp: 130, gold: 115,
+            name: 'РЫЦАРЬ СМЕРТИ', plural: 'РЫЦАРИ СМЕРТИ', hp: 402,
+            damageMin: 85, damageMax: 101,
+            exp: 130,
+            gold: { easy: 98, normal: 130, hard: 201, hardcore: 330 },
+            easy: { hp: 290, damageMin: 70, damageMax: 84 },
             dir: 'death-knight', h: 1.12, threat: 4,
             hint: 'Элита. Каждый третий удар — двойной. Держи защиту.',
             hitColors: ['#ffffff', '#ffd34a', '#ff8a2a', '#5a4a60'],
@@ -491,8 +501,10 @@
     /* ------------------------------------------------------------------ */
     /* enemies                                                             */
     /* ------------------------------------------------------------------ */
-    function scaledMob(base, w) {
-        const diff = hardcore ? C.HARDCORE : C.DIFFICULTY[difficultyKey] || C.DIFFICULTY.normal;
+    function scaledMob(mob, w) {
+        const key = hardcore ? 'hardcore' : C.DIFFICULTY[difficultyKey] ? difficultyKey : 'normal';
+        const diff = hardcore ? C.HARDCORE : C.DIFFICULTY[key];
+        const base = key === 'easy' && mob.easy ? Object.assign({}, mob, mob.easy) : mob;
         const scale = 1 + (w - 1) * (hardcore ? HC_SCALE : WAVE_SCALE);
         const hp = Math.round(base.hp * diff.enemyHp * scale);
         return {
@@ -502,7 +514,7 @@
             dmgMin: Math.max(1, Math.round(base.damageMin * diff.enemyDmg * scale)),
             dmgMax: Math.max(1, Math.round(base.damageMax * diff.enemyDmg * scale)),
             exp: Math.round(base.exp * diff.reward),
-            gold: Math.round(base.gold * diff.reward)
+            gold: base.gold[key]
         };
     }
 
@@ -1951,7 +1963,6 @@
             FX.ambient.ash(bgLayer, 2, ['#3a4a6a', '#2a3450', '#1a2236']);
             scheduleLightning();
         } else {
-            FX.backdropVideo(backdrop, M + 'video/desert_dusk.mp4' + (PAGE_V ? '?' + PAGE_V : ''));
             FX.ambient.sand(bgLayer, 34);
             FX.ambient.ash(bgLayer, 3, ['#7a3a2a', '#5a2a22', '#3a1a16']);
         }

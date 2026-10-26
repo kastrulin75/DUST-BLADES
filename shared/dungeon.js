@@ -1,7 +1,7 @@
 /**
  * DUST & BLADES — animated dungeon backdrop (main menu)
  *
- * Looping video of the dungeon wall with torch glow, embers and fog on top.
+ * The dungeon wall with torch glow, embers and fog on top.
  */
 (function (global) {
     'use strict';
@@ -37,7 +37,6 @@
         const box = stage.querySelector('.stage-box');
         const img = stage.querySelector('.stage-img');
         const lights = Array.from(stage.querySelectorAll('.torch-light'));
-        FX.backdropVideo(img, '../media/video/bg_menu.mp4' + (V ? '?' + V : ''));
 
         const layer = FX.createLayer({ z: 1 });
         // embers rise from the torches

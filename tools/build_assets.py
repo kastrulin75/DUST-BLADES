@@ -13,6 +13,7 @@ Writes media/sprites/manifest.js with frame sizes for the game.
 usage: python tools/build_assets.py
 """
 import json
+import math
 import os
 import numpy as np
 from PIL import Image
@@ -238,12 +239,22 @@ def build_images():
     for name, side in [('logo', 640), ('victory', 900), ('lose', 900)]:
         fit(load(os.path.join(IMG_SRC, name + '.png')), side).save(os.path.join(IMG_DST, name + '.png'), optimize=True)
     # menu dungeon: darkened and the shadows deepened so the menu reads on top of it
-    a = np.asarray(Image.open(os.path.join(IMG_SRC, 'bg.jpg')).convert('RGB')).astype(np.float32) / 255
+    a = np.asarray(Image.open(os.path.join(IMG_SRC, 'bg.png')).convert('RGB')).astype(np.float32) / 255
     a = np.clip((a ** 1.15) * 0.62, 0, 1)
     Image.fromarray((a * 255 + .5).astype(np.uint8)).save(os.path.join(IMG_DST, 'bg_menu.jpg'), quality=88)
     # hardcore battle: night storm, used as is
     Image.open(os.path.join(IMG_SRC, 'hardcore.jpg')).convert('RGB').save(os.path.join(IMG_DST, 'hardcore.jpg'), quality=90)
-    # battle desert (desert_dusk.jpg) is the first frame of its video: see tools/build_video.py
+    # battle desert: warm dusk grade baked in
+    # (brightness .85, saturate .85, sepia .25, hue -8deg, contrast 1.05)
+    img = np.asarray(Image.open(os.path.join(IMG_SRC, 'desert_castle.png')).convert('RGB')).astype(np.float64) / 255
+    sa, sp, t = 0.85, 1 - 0.25, math.radians(-8)
+    c, sn = math.cos(t), math.sin(t)
+    S = np.array([[0.213 + 0.787 * sa, 0.715 - 0.715 * sa, 0.072 - 0.072 * sa], [0.213 - 0.213 * sa, 0.715 + 0.285 * sa, 0.072 - 0.072 * sa], [0.213 - 0.213 * sa, 0.715 - 0.715 * sa, 0.072 + 0.928 * sa]])
+    P = np.array([[0.393 + 0.607 * sp, 0.769 - 0.769 * sp, 0.189 - 0.189 * sp], [0.349 - 0.349 * sp, 0.686 + 0.314 * sp, 0.168 - 0.168 * sp], [0.272 - 0.272 * sp, 0.534 - 0.534 * sp, 0.131 + 0.869 * sp]])
+    H = np.array([[0.213 + c * 0.787 - sn * 0.213, 0.715 - c * 0.715 - sn * 0.715, 0.072 - c * 0.072 + sn * 0.928], [0.213 - c * 0.213 + sn * 0.143, 0.715 + c * 0.285 + sn * 0.140, 0.072 - c * 0.072 - sn * 0.283], [0.213 - c * 0.213 - sn * 0.787, 0.715 - c * 0.715 + sn * 0.715, 0.072 + c * 0.928 + sn * 0.072]])
+    img = np.clip((img * 0.85) @ (H @ P @ S).T, 0, 1)
+    img = np.clip((img - 0.5) * 1.05 + 0.5, 0, 1)
+    Image.fromarray((img * 255 + .5).astype(np.uint8)).save(os.path.join(IMG_DST, 'desert_dusk.jpg'), quality=88)
     print('images:', sorted(os.listdir(IMG_DST)))
 
 
